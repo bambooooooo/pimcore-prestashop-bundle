@@ -1,6 +1,6 @@
 <?php
 
-namespace bnix\PimcorePrestashopBundle;
+namespace Bnix\PimcorePrestashopBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
