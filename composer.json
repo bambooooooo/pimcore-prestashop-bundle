@@ -1,0 +1,17 @@
+{
+	"name": "bnix/pimcore-prestashop-bundle",
+	"description": "Pimcore 11 to Prestashop 8.x integration bundle",
+	"type": "symfony-bundle",
+	"license": "proprietary",
+	"autoload": {
+		"psr-4": {
+			"Bnix\\PimcorePrestashopBundle\\": "src/"
+		}
+	},
+	"require": {
+		"php": "^8.2",
+		"pimcore/pimcore": "^11.0",
+		"symfony/framework-bundle": "^6.4"
+	}
+}
+
