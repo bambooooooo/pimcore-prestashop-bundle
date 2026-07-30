@@ -1,0 +1,18 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Bnix\PimcorePrestashopBundle\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Enum/'
+
+    Bnix\PimcorePrestashopBundle\Registry\StoreRegistry:
+        factory: ['@Bnix\PimcorePrestashopBundle\Registry\StoreRegistryFactory', 'create']
+        arguments:
+            $config: '%bnix_pimcore_prestashop%'
+
+    Bnix\PimcorePrestashopBundle\Webservice\PrestashopClient:
+        public: false

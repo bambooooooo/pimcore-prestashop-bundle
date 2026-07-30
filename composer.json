@@ -11,7 +11,8 @@
 	"require": {
 		"php": "^8.2",
 		"pimcore/pimcore": "^11.0",
-		"symfony/framework-bundle": "^6.4"
+		"symfony/framework-bundle": "^6.4",
+    "symfony/http-client":"^6.4"
 	}
 }
 

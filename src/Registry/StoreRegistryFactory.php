@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bnix\PimcorePrestashopBundle\Registry;
+
+use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
+
+final class StoreRegistryFactory
+{
+    public function create(array $config): StoreRegistry
+    {
+        $stores = [];
+
+        foreach ($config['stores'] ?? [] as $name => $store) {
+            $stores[] = new StoreConfiguration(
+                $name,
+                $store['url'],
+                $store['host'] ?? str_replace("http://", "", str_replace("https://", "", $store['url'])),
+                $store['api_key'],
+                $store['languages'] ?? [],
+                $store['currencies'] ?? [],
+                $store['multistore'] ?? [],
+                $store['mappings'] ?? [],
+            );
+        }
+
+        return new StoreRegistry($stores);
+    }
+}
