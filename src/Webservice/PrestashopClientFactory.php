@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Webservice;
 
 
-use Bnix\PimcorePrestashopBundle\Config\PrestashopConfiguration;
-use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
-use PrestashopClientInterface;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
+use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientInterface;
 
 final class PrestashopClientFactory
 {

@@ -2,6 +2,8 @@
 
 namespace Bnix\PimcorePrestashopBundle\Mapping;
 
+use Bnix\PimcorePrestashopBundle\FieldMapping\FieldMapping;
+
 final class MappingResolver
 {
     public function resolve(string $prestashopField, string $value)

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Registry;
 
 use Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface;
+use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 
 class FieldMapperRegistry
@@ -18,15 +19,17 @@ class FieldMapperRegistry
     ) {
     }
 
-    public function resolve(string $definition): FieldMapperInterface
+    public function resolve(string $fieldOrMapper, Data|null $definition): FieldMapperInterface
     {
         foreach ($this->mappers as $mapper) {
 
-            if($mapper->supports($definition)) {
+            if($mapper->supports($fieldOrMapper, $definition)) {
                 return $mapper;
             }
         }
 
-        throw new \RuntimeException("No mapper found for definition '$definition'.");
+        $fieldTypeNote = $definition ? " of type '{$definition->getFieldType()}'" : '';
+
+        throw new \RuntimeException("No mapper found for definition '$fieldOrMapper'$fieldTypeNote.");
     }
 }

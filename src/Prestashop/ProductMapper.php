@@ -6,6 +6,7 @@ use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
 use Bnix\PimcorePrestashopBundle\Registry\FieldMapperRegistry;
 use Bnix\PimcorePrestashopBundle\Mapping\MappingConfiguration;
 use Pimcore\Model\DataObject;
+use Pimcore\Model\DataObject\ClassDefinition;
 
 final class ProductMapper
 {
@@ -20,18 +21,27 @@ final class ProductMapper
 
         $values = [];
 
-        foreach ($mapping->all() as $prestashopField => $definition)
+        $classDef = ClassDefinition::getByName($product->getClassName());
+
+        foreach ($mapping->all() as $prestashopField => $fieldOrMapper)
         {
-            $mapper = $this->registry->resolve($definition);
-            $values[$prestashopField] = $mapper->map($product, $definition);
+            $def = $classDef->getFieldDefinition($fieldOrMapper);
+            $mapper = $this->registry->resolve($fieldOrMapper, $def);
+            $values[$prestashopField] = $mapper->map($product, $fieldOrMapper);
         }
 
         return new PrestashopProductData(
             reference: $values['reference'] ?? null,
             name: $values['name'] ?? null,
+            description: $values['description'] ?? null,
             supplierReference: $values['supplier_reference'] ?? null,
             price: $values['price'] ?? null,
+            image: $values['image'] ?? null,
             images: $values['images'] ?? [],
+            Width: $values['width'] ?? null,
+            Height: $values['height'] ?? null,
+            Depth: $values['depth'] ?? null,
+            Mass: $values['weight'] ?? null
         );
     }
 }

@@ -10,7 +10,7 @@ final class MappingConfiguration
      * @param array<string,string> $mapping
      */
     public function __construct(
-        private array $mapping,
+        private readonly array $mapping,
     ) {
     }
 
@@ -23,7 +23,7 @@ final class MappingConfiguration
         }
 
         return new self(
-            $store->getMappings()[$className] ?? []
+            $store->getMappings()[$className]
         );
     }
 

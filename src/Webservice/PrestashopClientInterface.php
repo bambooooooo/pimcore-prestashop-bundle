@@ -1,5 +1,7 @@
 <?php
 
+namespace Bnix\PimcorePrestashopBundle\Webservice;
+
 interface PrestashopClientInterface
 {
     public function get(

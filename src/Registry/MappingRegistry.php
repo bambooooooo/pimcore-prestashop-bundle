@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bnix\PimcorePrestashopBundle\Registry;
 
-use Bnix\PimcorePrestashopBundle\Mapping\FieldMapping;
+use Bnix\PimcorePrestashopBundle\FieldMapping\FieldMapping;
 use Bnix\PimcorePrestashopBundle\Mapping\MappingResolver;
 
 final class MappingRegistry

@@ -7,7 +7,6 @@ namespace Bnix\PimcorePrestashopBundle\Webservice;
 use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
 use Bnix\PimcorePrestashopBundle\Exception\AuthenticationException;
 use Bnix\PimcorePrestashopBundle\Exception\NetworkException;
-use PrestashopClientInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class PrestashopClient implements PrestashopClientInterface

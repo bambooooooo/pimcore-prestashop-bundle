@@ -1,6 +1,8 @@
 <?php
 
-namespace Bnix\PimcorePrestashopBundle\Mapping;
+namespace Bnix\PimcorePrestashopBundle\FieldMapping;
+
+use Bnix\PimcorePrestashopBundle\Mapping\MappingType;
 
 final class FieldMapping
 {
