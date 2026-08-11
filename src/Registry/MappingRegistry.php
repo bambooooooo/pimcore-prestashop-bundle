@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Pimcore\PimcorePrestashopBundle\Bundle\Registry;
+namespace Bnix\PimcorePrestashopBundle\Registry;
 
 use Bnix\PimcorePrestashopBundle\Mapping\FieldMapping;
 use Bnix\PimcorePrestashopBundle\Mapping\MappingResolver;
-use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
 
 final class MappingRegistry
 {
@@ -24,17 +23,7 @@ final class MappingRegistry
                     $this->mappings[$store->getName()][$class][$prestashopField] =
                         $resolver->resolve($prestashopField, $source);
                 }
-
-
             }
         }
-    }
-
-    /**
-     * @return array<string,FieldMapping>
-     */
-    public function get(string $store, string $class): array
-    {
-        return $this->mappings[$store][$class] ?? [];
     }
 }

@@ -1,0 +1,20 @@
+bnix_pimcore_prestashop:
+    stores:
+        main:
+            url: 'http://prestashop'
+            host: 'prestashop.local'
+            api_key: 'AWVDMSUHIPXEQD7EA9A1GIKDSSLE9D4H'
+
+            languages:
+                - pl
+
+            currencies:
+                - PLN
+
+            mappings:
+
+                Product:
+
+                    reference: Sku
+                    supplier_reference: MPN
+                    name: Name

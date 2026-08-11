@@ -9,10 +9,7 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Enum/'
 
-    Bnix\PimcorePrestashopBundle\Registry\StoreRegistry:
-        factory: ['@Bnix\PimcorePrestashopBundle\Registry\StoreRegistryFactory', 'create']
-        arguments:
-            $config: '%bnix_pimcore_prestashop%'
-
-    Bnix\PimcorePrestashopBundle\Webservice\PrestashopClient:
-        public: false
+    _instanceof:
+        Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface:
+            tags:
+                - 'bnix.pimcore_prestashop.field_mapper'

@@ -8,12 +8,12 @@ use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
 
 final class StoreRegistryFactory
 {
-    public function create(array $config): StoreRegistry
+    public static function create(array $config): StoreRegistry
     {
         $stores = [];
 
         foreach ($config['stores'] ?? [] as $name => $store) {
-            $stores[] = new StoreConfiguration(
+            $stores[$name] = new StoreConfiguration(
                 $name,
                 $store['url'],
                 $store['host'] ?? str_replace("http://", "", str_replace("https://", "", $store['url'])),

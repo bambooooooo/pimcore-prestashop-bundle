@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Bnix\PimcorePrestashopBundle\DependencyInjection;
 
-use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
+use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
+use Bnix\PimcorePrestashopBundle\Registry\StoreRegistryFactory;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -29,5 +30,10 @@ final class BnixPimcorePrestashopExtension extends Extension
             'bnix_pimcore_prestashop',
             $config
         );
+
+        $container->getDefinition(StoreRegistry::class)->setFactory([
+            StoreRegistryFactory::class,
+            'create'
+        ])->setArgument(0, $config);
     }
 }

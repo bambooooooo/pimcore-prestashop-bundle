@@ -16,14 +16,14 @@ final class StoreConfiguration
      * @param array<string, array<string,string>> $mappings
      */
     public function __construct(
-        private string $name,
-        private string $url,
-        private string $host,
-        private string $apiKey,
-        private array $languages,
-        private array $currencies,
-        private array $multistore,
-        private array $mappings,
+        private readonly string $name,
+        private readonly string $url,
+        private readonly string $host,
+        private readonly string $apiKey,
+        private readonly array  $languages,
+        private readonly array  $currencies,
+        private readonly array  $multistore,
+        private readonly array  $mappings,
     ) {
     }
 
