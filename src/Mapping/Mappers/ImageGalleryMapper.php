@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Bnix\PimcorePrestashopBundle\FieldMapping;
+namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
-use Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\Data\Hotspotimage;
 
-final class ImageGalleryMapper implements FieldMapperInterface
+final class ImageGalleryMapper implements MapperInterface
 {
     private const FIELD_TYPES = [
         'imageGallery',
@@ -33,7 +33,7 @@ final class ImageGalleryMapper implements FieldMapperInterface
         return $urls;
     }
 
-    public function supports(string $fieldOrMapper, Data|null $definition): bool
+    public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool
     {
         if(!$definition)
             return false;

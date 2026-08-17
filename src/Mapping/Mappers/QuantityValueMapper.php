@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Bnix\PimcorePrestashopBundle\FieldMapping;
+namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
-use Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Data\QuantityValue;
 
-final class QuantityValueFieldMapper implements FieldMapperInterface
+final class QuantityValueMapper implements MapperInterface
 {
-    public function supports(string $fieldOrMapper, Data|null $definition): bool
+    public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool
     {
         if(!$definition)
             return false;

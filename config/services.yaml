@@ -10,6 +10,10 @@ services:
             - '../src/Enum/'
 
     _instanceof:
-        Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface:
+        Bnix\PimcorePrestashopBundle\Mapping\MapperInterface:
             tags:
                 - 'bnix.pimcore_prestashop.field_mapper'
+
+    Bnix\PimcorePrestashopBundle\Registry\MapperRegistry:
+        arguments:
+            $mappers: !tagged_iterator { tag: bnix.pimcore_prestashop.field_mapper, exclude: ['Bnix\PimcorePrestashopBundle\Mapping\Mappers\LiteralFieldMapper'] }

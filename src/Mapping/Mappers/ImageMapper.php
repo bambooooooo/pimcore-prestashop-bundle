@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Bnix\PimcorePrestashopBundle\FieldMapping;
+namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
-use Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 
-final class ImageMapper implements FieldMapperInterface
+final class ImageMapper implements MapperInterface
 {
     private const FIELD_TYPES = [
         'image',
@@ -25,7 +25,7 @@ final class ImageMapper implements FieldMapperInterface
         return $field->getRealFullPath();
     }
 
-    public function supports(string $fieldOrMapper, Data|null $definition): bool
+    public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool
     {
         if(!$definition)
             return false;

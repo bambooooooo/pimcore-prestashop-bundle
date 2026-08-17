@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bnix\PimcorePrestashopBundle\Registry;
+namespace Bnix\PimcorePrestashopBundle\Config;
 
-use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
+use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
 
 final class StoreRegistryFactory
 {

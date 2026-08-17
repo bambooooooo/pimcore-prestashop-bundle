@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bnix\PimcorePrestashopBundle\FieldMapping;
+namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
-use Bnix\PimcorePrestashopBundle\Mapping\FieldMapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 
-final class ScalarFieldMapper implements FieldMapperInterface
+final class ScalarMapper implements MapperInterface
 {
     private const FIELD_TYPES = [
         'input',
@@ -28,7 +28,7 @@ final class ScalarFieldMapper implements FieldMapperInterface
         return $object->$getter();
     }
 
-    public function supports(string $fieldOrMapper, Data|null $definition): bool
+    public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool
     {
         if(!$definition)
             return false;

@@ -5,8 +5,8 @@ namespace Bnix\PimcorePrestashopBundle\Mapping;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject;
 
-interface FieldMapperInterface
+interface MapperInterface
 {
-    public function supports(string $fieldOrMapper, Data|null $definition): bool;
+    public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool;
     public function map(DataObject $object, string $field): mixed;
 }

@@ -2,28 +2,11 @@
 
 namespace Bnix\PimcorePrestashopBundle\Webservice;
 
+use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
+
 interface PrestashopClientInterface
 {
-    public function get(
-        string $resource,
-        array $parameters = []
-    ): string;
+    public function createProduct(PrestashopProductData $product): int;
 
-
-    public function post(
-        string $resource,
-        string $xml
-    ): string;
-
-
-    public function put(
-        string $resource,
-        string $xml
-    ): string;
-
-
-    public function delete(
-        string $resource,
-        array $parameters = []
-    ): void;
+    public function updateProduct(PrestashopProductData $product, int $externalId);
 }

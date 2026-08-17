@@ -7,16 +7,36 @@ namespace Bnix\PimcorePrestashopBundle\Webservice;
 use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
 use Bnix\PimcorePrestashopBundle\Exception\AuthenticationException;
 use Bnix\PimcorePrestashopBundle\Exception\NetworkException;
+use Bnix\PimcorePrestashopBundle\Exception\ParsingException;
+use Bnix\PimcorePrestashopBundle\Exception\PrestashopException;
+use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
+use Bnix\PimcorePrestashopBundle\Xml\ProductXmlBuilder;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class PrestashopClient implements PrestashopClientInterface
 {
     public function __construct(
         private readonly HttpClientInterface $client,
-        private readonly StoreConfiguration $configuration,
+        private readonly StoreConfiguration  $store,
+        private readonly ProductXmlBuilder   $productXmlBuilder,
     ) {
     }
 
+    public function createProduct(PrestashopProductData $product): int
+    {
+        $xml = $this->productXmlBuilder->build($product);
+        $response = $this->post('products', $xml);
+
+        return $this->extractProductId($response);
+    }
+
+    public function updateProduct(PrestashopProductData $product, int $externalId)
+    {
+        $xml = $this->productXmlBuilder->build($product, $externalId);
+        $response = $this->put('products/' . $externalId, $xml);
+
+        assert($externalId == $this->extractProductId($response));
+    }
 
     public function get(
         string $resource,
@@ -33,7 +53,7 @@ final class PrestashopClient implements PrestashopClientInterface
     }
 
 
-    public function post(
+    private function post(
         string $resource,
         string $xml
     ): string {
@@ -48,7 +68,21 @@ final class PrestashopClient implements PrestashopClientInterface
     }
 
 
-    public function put(
+    private function put(
+        string $resource,
+        string $xml
+    ): string {
+
+        return $this->request(
+            'PUT',
+            $resource,
+            [
+                'body' => $xml,
+            ]
+        );
+    }
+
+    private function patch(
         string $resource,
         string $xml
     ): string {
@@ -63,7 +97,7 @@ final class PrestashopClient implements PrestashopClientInterface
     }
 
 
-    public function delete(
+    private function delete(
         string $resource,
         array $parameters = []
     ): void {
@@ -92,12 +126,12 @@ final class PrestashopClient implements PrestashopClientInterface
                 array_merge(
                     [
                         'auth_basic' => [
-                            $this->configuration->getApiKey(),
+                            $this->store->getApiKey(),
                             '',
                         ],
                         'headers' => [
                             'Accept' => 'application/xml',
-                            'Host' => $this->configuration->getHost(),
+                            'Host' => $this->store->getHost(),
                         ],
                     ],
                     $options
@@ -113,7 +147,17 @@ final class PrestashopClient implements PrestashopClientInterface
                 throw new AuthenticationException(
                     sprintf(
                         'Authentication failed for store "%s".',
-                        $this->configuration->getName()
+                        $this->store->getName()
+                    )
+                );
+            }
+
+            if($statusCode === 404)
+            {
+                throw new PrestashopException(
+                    sprintf(
+                        'Entity not found in store "%s".',
+                        $this->store->getName()
                     )
                 );
             }
@@ -121,14 +165,25 @@ final class PrestashopClient implements PrestashopClientInterface
 
             if ($statusCode >= 400) {
 
-                throw new NetworkException(
-                    sprintf(
-                        'PrestaShop returned HTTP %d.',
-                        $statusCode
-                    )
-                );
-            }
+                try
+                {
+                    $errorsDetails = $this->extractErrors($response->getContent(false));
 
+                    throw new PrestashopException(
+                        sprintf('Prestashop validation errors: %s', implode(', ', $errorsDetails)),
+                    );
+                }
+                catch (ParsingException)
+                {
+                    throw new PrestashopException(
+                        sprintf(
+                            'PrestaShop returned HTTP %d: %s',
+                            $statusCode,
+                            $response->getContent(false)
+                        )
+                    );
+                }
+            }
 
             return $response->getContent();
 
@@ -139,7 +194,7 @@ final class PrestashopClient implements PrestashopClientInterface
 
         } catch (\Throwable $e) {
 
-            throw new NetworkException(
+            throw new PrestashopException(
                 $e->getMessage(),
                 0,
                 $e
@@ -147,13 +202,45 @@ final class PrestashopClient implements PrestashopClientInterface
         }
     }
 
+    private function extractErrors(string $xml): array
+    {
+        try
+        {
+            $doc = simplexml_load_string($xml);
+            $errors = [];
+
+            foreach ($doc->errors->error ?? [] as $error) {
+                $errors[] = $error->code . ': ' . $error->message;
+            }
+
+            return $errors;
+        }
+        catch (\Throwable)
+        {
+            throw new ParsingException();
+        }
+    }
+
+    private function extractProductId(string $xml): int
+    {
+        $document = simplexml_load_string($xml);
+        $id = (string)($document->product->id ?? '');
+
+        if ($id === '') {
+            throw new \RuntimeException(
+                'PrestaShop product creation response does not contain a product ID.',
+            );
+        }
+
+        return (int)$id;
+    }
 
     private function buildUrl(string $resource): string
     {
         return sprintf(
             '%s/api/%s',
             rtrim(
-                $this->configuration->getUrl(),
+                $this->store->getUrl(),
                 '/'
             ),
             ltrim(

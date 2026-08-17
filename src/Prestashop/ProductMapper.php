@@ -3,14 +3,14 @@
 namespace Bnix\PimcorePrestashopBundle\Prestashop;
 
 use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
-use Bnix\PimcorePrestashopBundle\Registry\FieldMapperRegistry;
+use Bnix\PimcorePrestashopBundle\Mapping\MappingResolver;
 use Bnix\PimcorePrestashopBundle\Mapping\MappingConfiguration;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition;
 
 final class ProductMapper
 {
-    public function __construct(private readonly FieldMapperRegistry $registry)
+    public function __construct(private readonly MappingResolver $resolver)
     {
 
     }
@@ -26,7 +26,7 @@ final class ProductMapper
         foreach ($mapping->all() as $prestashopField => $fieldOrMapper)
         {
             $def = $classDef->getFieldDefinition($fieldOrMapper);
-            $mapper = $this->registry->resolve($fieldOrMapper, $def);
+            $mapper = $this->resolver->resolve($fieldOrMapper, $def, $product);
             $values[$prestashopField] = $mapper->map($product, $fieldOrMapper);
         }
 
