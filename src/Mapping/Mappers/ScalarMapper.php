@@ -22,10 +22,22 @@ final class ScalarMapper implements MapperInterface
         'wysiwyg'
     ];
 
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
-        $getter = 'get' . ucfirst($field);
-        return $object->$getter();
+        if(!$isLocalized)
+        {
+            $getter = 'get' . ucfirst($field);
+            return $object->$getter();
+        }
+
+        $ret = [];
+        foreach($languages as $language => $languageId)
+        {
+            $getter = 'get' . ucfirst($field);
+            $ret[$languageId] = $object->$getter($language);
+        }
+
+        return $ret;
     }
 
     public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool

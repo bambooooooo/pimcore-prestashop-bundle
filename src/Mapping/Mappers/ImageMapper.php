@@ -15,7 +15,7 @@ final class ImageMapper implements MapperInterface
         'image',
     ];
 
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
         $getter = 'get' . ucfirst($field);
 

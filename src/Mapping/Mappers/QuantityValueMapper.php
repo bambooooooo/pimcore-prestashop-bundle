@@ -20,7 +20,7 @@ final class QuantityValueMapper implements MapperInterface
         return $definition->getFieldType() == 'quantityValue';
     }
 
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
         $getter = 'get' . ucfirst($field);
         return $object->$getter()?->getValue();

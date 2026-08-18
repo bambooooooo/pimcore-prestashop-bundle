@@ -16,18 +16,12 @@ final class DoctrineExternalProductReferenceStorage implements ExternalProductRe
 
     public function find(int $objectId, string $systemName): ?ExternalProductReference
     {
-        return $this->repository->findOne(
-            objectId: $objectId,
-            systemName: $systemName,
-        );
+        return $this->repository->findOne($objectId, $systemName);
     }
 
     public function save(int $objectId, string $systemName, string $externalId, string $hash): void
     {
-        $mapping = $this->repository->findOne(
-            objectId: $objectId,
-            systemName: $systemName,
-        );
+        $mapping = $this->repository->findOne($objectId, $systemName);
 
         if($mapping == null)
         {
@@ -35,7 +29,7 @@ final class DoctrineExternalProductReferenceStorage implements ExternalProductRe
         }
         else
         {
-            $mapping->setExternalId($externalId);
+            $mapping->setExternalId($externalId, $hash);
         }
 
         $this->repository->save($mapping);
@@ -43,10 +37,7 @@ final class DoctrineExternalProductReferenceStorage implements ExternalProductRe
 
     public function delete(int $objectId, string $systemName): void
     {
-        $mapping = $this->repository->findOne(
-            objectId: $objectId,
-            systemName: $systemName,
-        );
+        $mapping = $this->repository->findOne($objectId, $systemName);
 
         if($mapping != null)
         {

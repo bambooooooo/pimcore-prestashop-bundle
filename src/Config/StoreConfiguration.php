@@ -52,7 +52,7 @@ final class StoreConfiguration
 
 
     /**
-     * @return string[]
+     * @return array<string, int>
      */
     public function getLanguages(): array
     {

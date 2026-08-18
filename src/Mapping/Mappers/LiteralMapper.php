@@ -5,10 +5,12 @@ namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
+#[AsTaggedItem(priority: -100)]
 class LiteralMapper implements MapperInterface
 {
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
         return $field;
     }

@@ -6,10 +6,11 @@ use Bnix\PimcorePrestashopBundle\Mapping\Mappers\LiteralMapper;
 use Bnix\PimcorePrestashopBundle\Registry\MapperRegistry;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Psr\Container\ContainerInterface;
 
 final class MappingResolver
 {
-    public function __construct(private readonly MapperRegistry $registry)
+    public function __construct(private readonly MapperRegistry $registry, private readonly ContainerInterface $container)
     {
 
     }
@@ -20,7 +21,7 @@ final class MappingResolver
         {
             if(class_exists($fieldOrMapper) && is_a($fieldOrMapper, MapperInterface::class, true))
             {
-                return new $fieldOrMapper();
+                return $this->container->get($fieldOrMapper);
             }
 
             $fieldTypeNote = $definition ? " of type '{$definition->getFieldType()}'" : '';
@@ -28,7 +29,7 @@ final class MappingResolver
             throw new \RuntimeException("No mapper found for definition '$fieldOrMapper'$fieldTypeNote.");
         }
 
-        foreach ($this->registry as $mapper) {
+        foreach ($this->registry->getMappers() as $mapper) {
 
             if($mapper->supports($fieldOrMapper, $definition, $product)) {
                 return $mapper;

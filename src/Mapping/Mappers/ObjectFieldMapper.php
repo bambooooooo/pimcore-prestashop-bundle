@@ -7,10 +7,12 @@ namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
+#[AsTaggedItem(priority: -50)]
 final class ObjectFieldMapper implements MapperInterface
 {
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
         $getter = 'get' . ucfirst($field);
         return $object->$getter();
@@ -18,6 +20,7 @@ final class ObjectFieldMapper implements MapperInterface
 
     public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool
     {
-        return !class_exists($fieldOrMapper);
+        $getter = 'get' . ucfirst($fieldOrMapper);
+        return !class_exists($fieldOrMapper) && method_exists($product, $getter);
     }
 }

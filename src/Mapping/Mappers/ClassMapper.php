@@ -10,7 +10,7 @@ use Pimcore\Model\DataObject\ClassDefinition\Data;
 
 final class ClassMapper implements MapperInterface
 {
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
         $getter = 'get' . ucfirst($field);
         return $object->$getter();

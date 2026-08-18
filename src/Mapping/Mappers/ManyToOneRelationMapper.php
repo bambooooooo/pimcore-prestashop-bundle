@@ -14,7 +14,7 @@ final class ManyToOneRelationMapper implements MapperInterface
         'manyToOneRelation'
     ];
 
-    public function map(DataObject $object, string $field): mixed
+    public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
         $objectFields = ['Name', 'Title', 'Code', 'Sku'];
 

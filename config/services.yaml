@@ -16,4 +16,8 @@ services:
 
     Bnix\PimcorePrestashopBundle\Registry\MapperRegistry:
         arguments:
-            $mappers: !tagged_iterator { tag: bnix.pimcore_prestashop.field_mapper, exclude: ['Bnix\PimcorePrestashopBundle\Mapping\Mappers\LiteralFieldMapper'] }
+            $mappers: !tagged_iterator { tag: bnix.pimcore_prestashop.field_mapper }
+
+    Bnix\PimcorePrestashopBundle\Mapping\MappingResolver:
+        arguments:
+            $container: '@service_container'

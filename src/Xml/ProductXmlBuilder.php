@@ -26,32 +26,37 @@ final class ProductXmlBuilder
             $this->appendValue($document, $productNode, "id", $id);
         }
 
+        $this->appendValue($document, $productNode, "state", 1); // MANDATORY
+        $this->appendValue($document, $productNode, "new", 1);
+        $this->appendValue($document, $productNode, "reference", ($product->referencePrefix ? $product->referencePrefix . "_" : '') . $product->reference);
+        $this->appendValue($document, $productNode, "supplier_reference", $product->reference);
+        $this->appendValue($document, $productNode, "width", $product->width);
+        $this->appendValue($document, $productNode, "height", $product->height);
+        $this->appendValue($document, $productNode, "depth", $product->depth);
+        $this->appendValue($document, $productNode, "weight", $product->mass);
+        $this->appendValue($document, $productNode, "ean13", $product->ean);
+        $this->appendValue($document, $productNode, "isbn", $product->isbn);
+        $this->appendValue($document, $productNode, "upc", $product->upc);
+        $this->appendValue($document, $productNode, "mpn", $product->mpn);
+        $this->appendValue($document, $productNode, 'price', $product->price);
+
+//        $this->appendLocalizedValue($document, $productNode, 'description', $product->description);
+//        $this->appendLocalizedValue($document, $productNode,'description_short', $product->descriptionShort);
+
 //        $this->appendValue($document, $productNode, "id_manufacturer", 1);
 //        $this->appendValue($document, $productNode, "id_supplier", 1);
-//        $this->appendValue($document, $productNode, "id_category_default", $obj->getPs_megstyl_pl_parent()->getPs_megstyl_pl_id());
-//        $this->appendValue($document, $productNode, "new", 1);
+//        $this->appendValue($document, $productNode, "id_category_default", 0);
 //        $this->appendValue($document, $productNode, "cache_default_attribute", 1);
 //        $this->appendValue($document, $productNode, "id_default_image", null);
 //        $this->appendValue($document, $productNode, "id_default_combination", null);
 //        $this->appendValue($document, $productNode, "id_tax_rules_group", 1);
 //        $this->appendValue($document, $productNode, "type", 1);
 //        $this->appendValue($document, $productNode, "id_shop_default", 1);
-        $this->appendValue($document, $productNode, "reference", $product->reference);
-//        $this->appendValue($document, $productNode, "supplier_reference", $obj->getId() . "-" . $obj->getKey());
 //        $this->appendValue($document, $productNode, "location", null);
-        $this->appendValue($document, $productNode, "width", $product->width);
-        $this->appendValue($document, $productNode, "height", $product->height);
-        $this->appendValue($document, $productNode, "depth", $product->depth);
-        $this->appendValue($document, $productNode, "weight", $product->mass);
 //        $this->appendValue($document, $productNode, "quantity_discount", 0);
-        $this->appendValue($document, $productNode, "ean13", $product->ean);
-        $this->appendValue($document, $productNode, "isbn", $product->isbn);
-        $this->appendValue($document, $productNode, "upc", $product->upc);
-        $this->appendValue($document, $productNode, "mpn", $product->mpn);
 //        $this->appendValue($document, $productNode, "cache_is_pack", 0);
 //        $this->appendValue($document, $productNode, "cache_has_attachments", 0);
 //        $this->appendValue($document, $productNode, "is_virtual", 0);
-        $this->appendValue($document, $productNode, "state", 1); // MANDATORY
 //        $this->appendValue($document, $productNode, "additional_delivery_times", null);
 //        $this->appendValue($document, $productNode, "delivery_in_stock", null);
 //        $this->appendValue($document, $productNode, "delivery_out_stock", null);
@@ -84,18 +89,12 @@ final class ProductXmlBuilder
 //        $this->appendValue($document, $productNode, 'meta_keywords', null);
 //        $this->appendValue($document, $productNode, 'meta_title', null);
 //        $this->appendValue($document, $productNode, 'link_rewrite', null);
-        $this->appendValue($document, $productNode, 'price', $product->price);
-        $this->appendValue($document, $productNode,'description', $product->description);
-        $this->appendValue($document, $productNode,'description_short', $product->descriptionShort);
 //        $this->appendValue($document, $productNode,'available_now', null);
 //        $this->appendValue($document, $productNode,'available_later', null);
 //        $this->appendValue($document, $productNode, 'associations', null);
 
-        $name = $document->createElement('name');
-        $language = $document->createElement('language', $product->name);
-        $language->setAttribute('id', '1');
-        $name->appendChild($language);
-        $productNode->appendChild($name);
+
+        $this->appendLocalizedValue($document, $productNode, 'name', $product->name);
 
         return $document->saveXML();
     }
@@ -107,10 +106,28 @@ final class ProductXmlBuilder
             return;
         }
 
-        $element = $document->createElement($name, htmlspecialchars((string) $value));
+        $element = $document->createElement($name, htmlspecialchars("$value"));
 
         $parent->appendChild($element);
     }
 
+    private function appendLocalizedValue(DomDocument $document, \DOMElement $parent, string $name, array|null $localizedValue): void
+    {
+        if($localizedValue == null)
+        {
+            return;
+        }
+
+        $element = $document->createElement($name);
+
+        foreach ($localizedValue as $langId => $localizedName)
+        {
+            $language = $document->createElement('language', $localizedName ?? "");
+            $language->setAttribute('id', "$langId");
+            $element->appendChild($language);
+        }
+
+        $parent->appendChild($element);
+    }
 
 }

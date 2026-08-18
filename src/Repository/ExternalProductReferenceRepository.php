@@ -26,6 +26,14 @@ final class ExternalProductReferenceRepository extends ServiceEntityRepository
         ]);
     }
 
+    /**
+     * @return array|ExternalProductReference[]
+     */
+    public function findAll(): array
+    {
+        return parent::findAll();
+    }
+
     public function save(ExternalProductReference $externalReference): void
     {
         $this->getEntityManager()->persist($externalReference);

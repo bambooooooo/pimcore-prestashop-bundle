@@ -90,12 +90,6 @@ class ExternalProductReference
         return $this->updatedAt;
     }
 
-    public function setExternalId(string $externalId): void
-    {
-        $this->externalId = $externalId;
-        $this->updatedAt = new DateTime();
-    }
-
     public function getHash(): string
     {
         return $this->hash;
@@ -106,4 +100,16 @@ class ExternalProductReference
         return $this->systemName;
     }
 
+    public function setExternalId(string $externalId, string $hash): void
+    {
+        $this->externalId = $externalId;
+        $this->hash = $hash;
+        $this->updatedAt = new DateTime();
+    }
+
+    public function setHash(string $hash): void
+    {
+        $this->hash = $hash;
+        $this->updatedAt = new DateTime();
+    }
 }
