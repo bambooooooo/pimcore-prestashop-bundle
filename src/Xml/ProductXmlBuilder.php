@@ -28,7 +28,7 @@ final class ProductXmlBuilder
 
         $this->appendValue($document, $productNode, "state", 1); // MANDATORY
         $this->appendValue($document, $productNode, "new", 1);
-        $this->appendValue($document, $productNode, "reference", ($product->referencePrefix ? $product->referencePrefix . "_" : '') . $product->reference);
+        $this->appendValue($document, $productNode, "reference", $product->reference);
         $this->appendValue($document, $productNode, "supplier_reference", $product->reference);
         $this->appendValue($document, $productNode, "width", $product->width);
         $this->appendValue($document, $productNode, "height", $product->height);

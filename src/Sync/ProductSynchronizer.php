@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Bnix\PimcorePrestashopBundle\Sync;
 
-use Bnix\PimcorePrestashopBundle\Event\PrestashopPreSendEvent;
+use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
+use Bnix\PimcorePrestashopBundle\Entity\ExternalProductReference;
 use Bnix\PimcorePrestashopBundle\Exception\PrestashopException;
+use Bnix\PimcorePrestashopBundle\Exception\PrestashopNotFoundException;
 use Bnix\PimcorePrestashopBundle\ExportPolicy\ExportPolicyInterface;
+use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
 use Bnix\PimcorePrestashopBundle\Prestashop\ProductMapper;
 use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
 use Bnix\PimcorePrestashopBundle\Storage\ExternalProductReferenceStorageInterface;
 use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientFactory;
+use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\Element\Note;
 
@@ -24,53 +28,130 @@ class ProductSynchronizer
                                 private readonly ExportPolicyInterface                    $exportPolicy)
     {}
 
-    public function synchronize(int $objectId, string $storeName): void
+    public function synchronize(int $objectId, string $storeName, bool $force = false): void
     {
-        $store = $this->storeRegistry->get($storeName);
         $obj = DataObject::getById($objectId);
 
-        $supported = $this->exportPolicy->supports($obj);
-
-        if(!$supported)
+        if(!$this->exportPolicy->supports($obj))
         {
             return;
         }
 
-        $prestashopProduct = $this->productMapper->map($obj, $store);
-        $hash = $prestashopProduct->getHash();
+        $store = $this->storeRegistry->get($storeName);
+        $product = $this->productMapper->map($obj, $store);
+        $hash = $product->getHash();
+        $client = $this->clientFactory->create($storeName);
 
-        $externalReference = $this->productReferenceStorage->find($objectId, $storeName);
-        $storeClient = $this->clientFactory->create($storeName);
-
-        if($externalReference === null)
+        try
         {
-            try
-            {
-                $id = (string)$storeClient->createProduct($prestashopProduct);
-
-                $this->productReferenceStorage->save($objectId, $storeName, $id, $prestashopProduct->getHash());
-                $this->createAndSaveSuccessNote($obj, $storeName, "Product created with id=$id");
-
-                $externalReference = $this->productReferenceStorage->find($objectId, $storeName);
-            }
-            catch (PrestashopException $exception)
-            {
-                $this->createAndSaveErrorNote($obj, $storeName, $exception->getMessage());
-                return;
-            }
+            $externalReference = $this->synchronizeProduct($obj, $store, $hash, $client, $product, $force);
+            $this->productImageSynchronizer->synchronize($externalReference, $product, $storeName);
         }
-        else
+        catch (PrestashopException $exception)
         {
-            if($hash != $externalReference->getHash())
-            {
-                $storeClient->updateProduct($prestashopProduct, (int)$externalReference->getExternalId());
+            $this->createAndSaveErrorNote($obj, $storeName, $exception->getMessage());
+        }
+    }
 
-                $externalReference->setHash($hash);
-                $this->productReferenceStorage->saveReference($externalReference);
-            }
+    private function synchronizeProduct(DataObject $obj,
+                                        StoreConfiguration $store,
+                                        string $hash,
+                                        PrestashopClientInterface $storeClient,
+                                        PrestashopProductData $prestashopProduct,
+                                        bool $force): ExternalProductReference
+    {
+        $externalReference = $this->productReferenceStorage->find($obj->getId(), $store->getName());
+
+        if($externalReference !== null)
+        {
+            return $this->updateExistingProduct($externalReference, $obj, $store, $hash, $storeClient, $prestashopProduct, $force);
         }
 
-        $this->productImageSynchronizer->synchronize($externalReference, $prestashopProduct, $storeName);
+        return $this->createOrAttachProduct($obj, $store, $storeClient, $prestashopProduct);
+    }
+
+    private function updateExistingProduct(ExternalProductReference  $reference,
+                                           DataObject $obj,
+                                           StoreConfiguration $store,
+                                           string $hash,
+                                           PrestashopClientInterface $client,
+                                           PrestashopProductData     $product,
+                                           bool $force): ExternalProductReference
+    {
+        $hashChanged = $reference->getHash() !== $hash;
+
+        if(!$force && !$hashChanged)
+        {
+            return $reference;
+        }
+
+        try
+        {
+            $client->updateProduct($product, (int)$reference->getExternalId());
+        }
+        catch (PrestashopNotFoundException)
+        {
+            $this->productReferenceStorage->delete($obj->getId(), $store->getName());
+
+            return $this->createProduct($obj, $store, $client, $product);
+        }
+
+        $reference->setHash($hash);
+        $this->productReferenceStorage->saveReference($reference);
+
+        return $reference;
+    }
+
+    private function createOrAttachProduct(DataObject $obj,
+                                           StoreConfiguration $store,
+                                           PrestashopClientInterface $client,
+                                           PrestashopProductData $product): ExternalProductReference
+    {
+        $existingId = $client->getProductIdByReference($product->reference);
+
+        if($existingId !== null)
+        {
+            $reference = new ExternalProductReference(
+                $obj->getId(),
+                $store->getName(),
+                (string) $existingId,
+                $product->getHash(),
+            );
+
+            $client->updateProduct(
+                $product,
+                $existingId,
+            );
+
+            $this->productReferenceStorage->saveReference($reference);
+
+            $this->createAndSaveSuccessNote($obj, $store->getName(), "Product updated with id=$existingId");
+
+            return $reference;
+        }
+
+        return $this->createProduct($obj, $store, $client, $product);
+    }
+
+    private function createProduct(DataObject $obj,
+                                   StoreConfiguration $store,
+                                   PrestashopClientInterface $client,
+                                   PrestashopProductData $product): ExternalProductReference
+    {
+        $id = (string)$client->createProduct($product);
+
+        $reference = new ExternalProductReference(
+            $obj->getId(),
+            $store->getName(),
+            $id,
+            $product->getHash(),
+        );
+
+        $this->productReferenceStorage->saveReference($reference);
+
+        $this->createAndSaveSuccessNote($obj, $store->getName(), "Product created with id=$id");
+
+        return $reference;
     }
 
     private function createAndSaveSuccessNote(DataObject $obj, string $storeName, string $message): void
@@ -98,5 +179,4 @@ class ProductSynchronizer
 
         $note->save();
     }
-
 }

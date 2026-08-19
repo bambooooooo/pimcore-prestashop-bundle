@@ -34,10 +34,10 @@ final class ProductMapper
         }
 
         $defaultLangId = $store->getLanguages()[array_key_first($store->getLanguages())];
+        $reference = ($values['reference_prefix'] ?? '') . "_" . ($values['reference'] ?? '');
 
         return new PrestashopProductData(
-            referencePrefix: in_array( 'reference_prefix', $values, true) ? (is_array($values['reference_prefix']) ? $values['reference_prefix'][$defaultLangId] : $values['reference_prefix']) : null,
-            reference: in_array('reference', $values, true) ? (is_array($values['reference']) ? $values['reference'][$defaultLangId] : $values['reference']) : null,
+            reference: $reference,
             name: $values['name'] ?? null,
             description: $values['description'] ?? null,
             descriptionShort: $values['description_short'] ?? null,

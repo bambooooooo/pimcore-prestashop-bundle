@@ -6,15 +6,11 @@ namespace Bnix\PimcorePrestashopBundle\Webservice;
 
 use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
 use Bnix\PimcorePrestashopBundle\Exception\AuthenticationException;
-use Bnix\PimcorePrestashopBundle\Exception\NetworkException;
 use Bnix\PimcorePrestashopBundle\Exception\ParsingException;
 use Bnix\PimcorePrestashopBundle\Exception\PrestashopException;
+use Bnix\PimcorePrestashopBundle\Exception\PrestashopNotFoundException;
 use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
 use Bnix\PimcorePrestashopBundle\Xml\ProductXmlBuilder;
-use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class PrestashopClient implements PrestashopClientInterface
@@ -53,22 +49,6 @@ final class PrestashopClient implements PrestashopClientInterface
         assert($this->extractImageId($response) > 0);
     }
 
-    public function getProductImages(int $externalId): array
-    {
-        try
-        {
-            $response = $this->get('images/products/' . $externalId);
-
-            return $this->extractProductImagesIds($response);
-        }
-        catch (PrestashopException $ex)
-        {
-            // prestashop throws 404 when product has no images
-        }
-
-        return [];
-    }
-
     public function clearProductImages(int $externalId)
     {
         $ids = $this->getProductImages($externalId);
@@ -77,6 +57,41 @@ final class PrestashopClient implements PrestashopClientInterface
         {
             $this->delete('images/products/' . $externalId . "/" . $imageId);
         }
+    }
+
+    public function getProductIdByReference(string $reference, $referenceField = 'reference'): int|null
+    {
+        $response = $this->get('products', [
+            "filter[$referenceField]" => "[$reference]",
+            'display' => '[id]',
+            'limit' => 1
+        ]);
+
+        $document = simplexml_load_string($response);
+
+        $id = (string)($document->products->product->id ?? '');
+
+        if ($id === '') {
+            return null;
+        }
+
+        return (int)$id;
+    }
+
+    private function getProductImages(int $externalId): array
+    {
+        try
+        {
+            $response = $this->get('images/products/' . $externalId);
+
+            return $this->extractProductImagesIds($response);
+        }
+        catch (PrestashopNotFoundException $ex)
+        {
+            // prestashop throws 404 when product has no images
+        }
+
+        return [];
     }
 
     public function get(
@@ -193,14 +208,13 @@ final class PrestashopClient implements PrestashopClientInterface
 
         if($statusCode === 404)
         {
-            throw new PrestashopException(
+            throw new PrestashopNotFoundException(
                 sprintf(
                     'Entity not found in store "%s".',
                     $this->store->getName()
                 )
             );
         }
-
 
         if ($statusCode >= 400) {
 
