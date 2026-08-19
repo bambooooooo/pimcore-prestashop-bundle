@@ -12,5 +12,7 @@ interface ExternalProductReferenceStorageInterface
 
     public function save(int $objectId, string $systemName, string $externalId, string $hash): void;
 
+    public function saveReference(ExternalProductReference $reference): void;
+
     public function delete(int $objectId, string $systemName): void;
 }

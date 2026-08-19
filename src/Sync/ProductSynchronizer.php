@@ -20,13 +20,13 @@ class ProductSynchronizer
                                 private readonly PrestashopClientFactory                  $clientFactory,
                                 private readonly StoreRegistry                            $storeRegistry,
                                 private readonly ProductMapper                            $productMapper,
+                                private readonly ProductImageSynchronizer                 $productImageSynchronizer,
                                 private readonly ExportPolicyInterface                    $exportPolicy)
     {}
 
     public function synchronize(int $objectId, string $storeName): void
     {
         $store = $this->storeRegistry->get($storeName);
-        $systemName = 'prestashop_' . $store->getName();
         $obj = DataObject::getById($objectId);
 
         $supported = $this->exportPolicy->supports($obj);
@@ -39,7 +39,7 @@ class ProductSynchronizer
         $prestashopProduct = $this->productMapper->map($obj, $store);
         $hash = $prestashopProduct->getHash();
 
-        $externalReference = $this->productReferenceStorage->find($objectId, $systemName);
+        $externalReference = $this->productReferenceStorage->find($objectId, $storeName);
         $storeClient = $this->clientFactory->create($storeName);
 
         if($externalReference === null)
@@ -48,27 +48,29 @@ class ProductSynchronizer
             {
                 $id = (string)$storeClient->createProduct($prestashopProduct);
 
-                $this->productReferenceStorage->save($objectId, $systemName, $id, $prestashopProduct->getHash());
+                $this->productReferenceStorage->save($objectId, $storeName, $id, $prestashopProduct->getHash());
                 $this->createAndSaveSuccessNote($obj, $storeName, "Product created with id=$id");
+
+                $externalReference = $this->productReferenceStorage->find($objectId, $storeName);
             }
             catch (PrestashopException $exception)
             {
                 $this->createAndSaveErrorNote($obj, $storeName, $exception->getMessage());
+                return;
             }
         }
         else
         {
-            $extId = $externalReference->getExternalId();
-
-            if($hash == $prestashopProduct->getHash())
+            if($hash != $externalReference->getHash())
             {
-                return;
+                $storeClient->updateProduct($prestashopProduct, (int)$externalReference->getExternalId());
+
+                $externalReference->setHash($hash);
+                $this->productReferenceStorage->saveReference($externalReference);
             }
-
-            $storeClient->updateProduct($prestashopProduct, (int)$extId);
-
-            $this->productReferenceStorage->save($objectId, $systemName, $extId, $hash);
         }
+
+        $this->productImageSynchronizer->synchronize($externalReference, $prestashopProduct, $storeName);
     }
 
     private function createAndSaveSuccessNote(DataObject $obj, string $storeName, string $message): void

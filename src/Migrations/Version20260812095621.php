@@ -21,6 +21,9 @@ final class Version20260812095621 extends AbstractMigration
             system_name VARCHAR(255) NOT NULL, external_id VARCHAR(255) NOT NULL,
             created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL,
             hash VARCHAR(64) NOT NULL,
+            hash_2 VARCHAR(64),
+            hash_3 VARCHAR(64),
+            hash_4 VARCHAR(64),
         PRIMARY KEY(id))
         DEFAULT CHARACTER SET UTF8MB4 COLLATE `utf8mb4_general_ci`
         ENGINE = InnoDB;');

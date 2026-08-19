@@ -9,6 +9,7 @@ use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\Data\Hotspotimage;
+use Pimcore\Model\DataObject\Data\ImageGallery;
 
 final class ImageGalleryMapper implements MapperInterface
 {
@@ -20,17 +21,17 @@ final class ImageGalleryMapper implements MapperInterface
     {
         $getter = 'get' . ucfirst($field);
 
-        /** @var Image $object */
+        /** @var ImageGallery $object */
         $field = $object->$getter();
 
-        $urls = [];
+        $imageAssetIds = [];
 
         /** @var Hotspotimage $image */
         foreach($field as $image) {
-            $urls[] = $image->getImage()->getRealFullPath(); // TODO: reduce to prestashop's default 2MB with caching
+            $imageAssetIds[] = $image->getImage()->getId();
         }
 
-        return $urls;
+        return $imageAssetIds;
     }
 
     public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool

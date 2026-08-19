@@ -19,6 +19,11 @@ final class DoctrineExternalProductReferenceStorage implements ExternalProductRe
         return $this->repository->findOne($objectId, $systemName);
     }
 
+    public function saveReference(ExternalProductReference $reference): void
+    {
+        $this->repository->save($reference);
+    }
+
     public function save(int $objectId, string $systemName, string $externalId, string $hash): void
     {
         $mapping = $this->repository->findOne($objectId, $systemName);

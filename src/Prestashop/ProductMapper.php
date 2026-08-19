@@ -43,6 +43,7 @@ final class ProductMapper
             descriptionShort: $values['description_short'] ?? null,
             supplierReference: $values['supplier_reference'] ?? null,
             price: $values['price'] ?? null,
+            images: $values['images'] ?? [],
             width: in_array('width', $values, true) ? (float)$values['width'] : null,
             height: in_array('height', $values, true) ? (float)$values['height'] : null,
             depth: in_array('depth', $values, true) ? (float)$values['depth'] : null,

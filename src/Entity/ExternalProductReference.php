@@ -53,12 +53,36 @@ class ExternalProductReference
     #[ORM\Column(name: 'hash', type: 'string', length: 64)]
     private string $hash;
 
-    public function __construct(int $objectId, string $systemName, string $externalId, string $hash)
+    /**
+     * General purpose hash 2
+     * @var string|null
+     */
+    #[ORM\Column(name: 'hash_2', type: 'string', length: 64)]
+    private ?string $hash2;
+
+    /**
+     * General purpose hash 3
+     * @var string|null
+     */
+    #[ORM\Column(name: 'hash_3', type: 'string', length: 64)]
+    private ?string $hash3;
+
+    /**
+     * General purpose hash 4
+     * @var string|null
+     */
+    #[ORM\Column(name: 'hash_4', type: 'string', length: 64)]
+    private ?string $hash4;
+
+    public function __construct(int $objectId, string $systemName, string $externalId, string $hash, string $hash2 = null, string $hash3 = null, string $hash4 = null)
     {
         $this->objectId = $objectId;
         $this->systemName = $systemName;
         $this->externalId = $externalId;
         $this->hash = $hash;
+        $this->hash2 = $hash2;
+        $this->hash3 = $hash3;
+        $this->hash4 = $hash4;
 
         $now = new DateTime();
         $this->createdAt = $now;
@@ -95,6 +119,21 @@ class ExternalProductReference
         return $this->hash;
     }
 
+    public function getHash2(): string|null
+    {
+        return $this->hash2;
+    }
+
+    public function getHash3(): string|null
+    {
+        return $this->hash3;
+    }
+
+    public function getHash4(): string|null
+    {
+        return $this->hash4;
+    }
+
     public function getSystemName(): string
     {
         return $this->systemName;
@@ -108,6 +147,24 @@ class ExternalProductReference
     }
 
     public function setHash(string $hash): void
+    {
+        $this->hash = $hash;
+        $this->updatedAt = new DateTime();
+    }
+
+    public function setHash2(string $hash): void
+    {
+        $this->hash2 = $hash;
+        $this->updatedAt = new DateTime();
+    }
+
+    public function setHash3(string $hash): void
+    {
+        $this->hash3 = $hash;
+        $this->updatedAt = new DateTime();
+    }
+
+    public function setHash4(string $hash): void
     {
         $this->hash = $hash;
         $this->updatedAt = new DateTime();

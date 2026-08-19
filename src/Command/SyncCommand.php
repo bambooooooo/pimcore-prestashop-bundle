@@ -57,12 +57,14 @@ class SyncCommand extends AbstractCommand
             $this->writeInfo("Syncing {$total} products with store {$store->getName()}...");
 
             $progressBar = new ProgressBar($output, $total);
-            $progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%');
+            $progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s% -- %message%');
 
+            $progressBar->setMessage('Syncing products');
             $progressBar->start();
 
             foreach($ids as $id)
             {
+                $progressBar->setMessage("#{$id}");
                 $this->bus->dispatch(new PrestashopProductSyncMessage($id, $store->getName()));
                 $progressBar->advance();
             }
@@ -74,7 +76,7 @@ class SyncCommand extends AbstractCommand
             return Command::SUCCESS;
         }
 
-        $this->bus->dispatch(new PrestashopProductSyncMessage($productId, $store));
+        $this->bus->dispatch(new PrestashopProductSyncMessage($productId, $store->getName()));
 
         return Command::SUCCESS;
     }

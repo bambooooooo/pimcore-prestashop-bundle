@@ -11,6 +11,10 @@ use Bnix\PimcorePrestashopBundle\Exception\ParsingException;
 use Bnix\PimcorePrestashopBundle\Exception\PrestashopException;
 use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
 use Bnix\PimcorePrestashopBundle\Xml\ProductXmlBuilder;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class PrestashopClient implements PrestashopClientInterface
@@ -36,6 +40,43 @@ final class PrestashopClient implements PrestashopClientInterface
         $response = $this->put('products/' . $externalId, $xml);
 
         assert($externalId == $this->extractProductId($response));
+    }
+
+    public function uploadProductImage(int $externalId, string $imagePath)
+    {
+        $response = $this->request('POST', 'images/products/' . $externalId, [
+            'body' => [
+                'image' => fopen($imagePath, 'r')
+            ]
+        ]);
+
+        assert($this->extractImageId($response) > 0);
+    }
+
+    public function getProductImages(int $externalId): array
+    {
+        try
+        {
+            $response = $this->get('images/products/' . $externalId);
+
+            return $this->extractProductImagesIds($response);
+        }
+        catch (PrestashopException $ex)
+        {
+            // prestashop throws 404 when product has no images
+        }
+
+        return [];
+    }
+
+    public function clearProductImages(int $externalId)
+    {
+        $ids = $this->getProductImages($externalId);
+
+        foreach($ids as $imageId)
+        {
+            $this->delete('images/products/' . $externalId . "/" . $imageId);
+        }
     }
 
     public function get(
@@ -118,88 +159,72 @@ final class PrestashopClient implements PrestashopClientInterface
         array $options
     ): string {
 
-        try {
-
-            $response = $this->client->request(
-                $method,
-                $this->buildUrl($resource),
-                array_merge(
-                    [
-                        'auth_basic' => [
-                            $this->store->getApiKey(),
-                            '',
-                        ],
-                        'headers' => [
-                            'Accept' => 'application/xml',
-                            'Host' => $this->store->getHost(),
-                        ],
+        $response = $this->client->request(
+            $method,
+            $this->buildUrl($resource),
+            array_merge(
+                [
+                    'auth_basic' => [
+                        $this->store->getApiKey(),
+                        '',
                     ],
-                    $options
+                    'headers' => [
+                        'Accept' => 'application/xml',
+                        'Host' => $this->store->getHost(),
+                    ],
+                ],
+                $options
+            )
+        );
+
+
+        $statusCode = $response->getStatusCode();
+
+
+        if ($statusCode === 401 || $statusCode === 403) {
+
+            throw new AuthenticationException(
+                sprintf(
+                    'Authentication failed for store "%s".',
+                    $this->store->getName()
                 )
             );
+        }
+
+        if($statusCode === 404)
+        {
+            throw new PrestashopException(
+                sprintf(
+                    'Entity not found in store "%s".',
+                    $this->store->getName()
+                )
+            );
+        }
 
 
-            $statusCode = $response->getStatusCode();
+        if ($statusCode >= 400) {
 
+            try
+            {
+                $errorsDetails = $this->extractErrors($response->getContent(false));
 
-            if ($statusCode === 401 || $statusCode === 403) {
-
-                throw new AuthenticationException(
-                    sprintf(
-                        'Authentication failed for store "%s".',
-                        $this->store->getName()
-                    )
+                throw new PrestashopException(
+                    sprintf('Prestashop validation errors: %s', implode(', ', $errorsDetails)),
                 );
             }
-
-            if($statusCode === 404)
+            catch (ParsingException)
             {
                 throw new PrestashopException(
                     sprintf(
-                        'Entity not found in store "%s".',
-                        $this->store->getName()
+                        'PrestaShop returned HTTP %d: %s',
+                        $statusCode,
+                        $response->getContent(false)
                     )
                 );
             }
-
-
-            if ($statusCode >= 400) {
-
-                try
-                {
-                    $errorsDetails = $this->extractErrors($response->getContent(false));
-
-                    throw new PrestashopException(
-                        sprintf('Prestashop validation errors: %s', implode(', ', $errorsDetails)),
-                    );
-                }
-                catch (ParsingException)
-                {
-                    throw new PrestashopException(
-                        sprintf(
-                            'PrestaShop returned HTTP %d: %s',
-                            $statusCode,
-                            $response->getContent(false)
-                        )
-                    );
-                }
-            }
-
-            return $response->getContent();
-
-
-        } catch (AuthenticationException|NetworkException $e) {
-
-            throw $e;
-
-        } catch (\Throwable $e) {
-
-            throw new PrestashopException(
-                $e->getMessage(),
-                0,
-                $e
-            );
         }
+
+        return $response->getContent();
     }
 
     private function extractErrors(string $xml): array
@@ -221,6 +246,18 @@ final class PrestashopClient implements PrestashopClientInterface
         }
     }
 
+    private function extractProductImagesIds(string $xml): array
+    {
+        $document = simplexml_load_string($xml);
+        $ids = [];
+
+        foreach ($document->image->declination ?? [] as $image) {
+            $ids[] = (int)$image['id'];
+        }
+
+        return $ids;
+    }
+
     private function extractProductId(string $xml): int
     {
         $document = simplexml_load_string($xml);
@@ -229,6 +266,20 @@ final class PrestashopClient implements PrestashopClientInterface
         if ($id === '') {
             throw new \RuntimeException(
                 'PrestaShop product creation response does not contain a product ID.',
+            );
+        }
+
+        return (int)$id;
+    }
+
+    private function extractImageId(string $xml): int
+    {
+        $document = simplexml_load_string($xml);
+        $id = (string)($document->image->id ?? '');
+
+        if ($id === '') {
+            throw new \RuntimeException(
+                'PrestaShop image creation response does not contain a image ID.',
             );
         }
 
