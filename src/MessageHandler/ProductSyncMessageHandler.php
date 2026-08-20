@@ -17,6 +17,6 @@ final class ProductSyncMessageHandler
     }
     public function __invoke(PrestashopProductSyncMessage $message): void
     {
-        $this->synchronizer->synchronize($message->productId, $message->store);
+        $this->synchronizer->synchronize($message->productId, $message->store, $message->force);
     }
 }

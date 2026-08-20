@@ -22,7 +22,7 @@ final class ImageMapper implements MapperInterface
         /** @var Image $object */
         $field = $object->$getter();
 
-        return $field->getRealFullPath();
+        return $field->getId();
     }
 
     public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool

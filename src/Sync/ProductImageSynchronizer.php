@@ -9,6 +9,7 @@ use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
 use Bnix\PimcorePrestashopBundle\Repository\ExternalProductReferenceRepository;
 use Bnix\PimcorePrestashopBundle\Storage\ExternalProductReferenceStorageInterface;
 use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientFactory;
+use http\Exception\RuntimeException;
 use Pimcore\Model\Asset;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -22,14 +23,14 @@ class ProductImageSynchronizer
 
     }
 
-    public function synchronize(ExternalProductReference $reference, PrestashopProductData $product, string $storeName)
+    public function synchronize(ExternalProductReference $reference, PrestashopProductData $product, string $storeName, bool $force = false)
     {
         $client = $this->clientFactory->create($storeName);
 
         $lastImageHash = $reference->getHash2();
         $currentImageHash = $this->getControlHash($product->images);
 
-        if($lastImageHash == $currentImageHash)
+        if($lastImageHash == $currentImageHash && !$force)
         {
             return;
         }
@@ -52,7 +53,7 @@ class ProductImageSynchronizer
             return $carry;
         });
 
-        return hash('sha256', $merged);
+        return hash('sha256', $merged ?? "");
     }
 
     private function getValidImageThumbnail(int $id): string

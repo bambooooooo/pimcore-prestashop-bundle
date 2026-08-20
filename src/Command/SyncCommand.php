@@ -10,6 +10,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Pimcore\Model\DataObject;
@@ -26,12 +27,14 @@ class SyncCommand extends AbstractCommand
     {
         $this->addArgument('store', InputArgument::REQUIRED);
         $this->addArgument('product_id', InputArgument::OPTIONAL, 'Product ID', 0);
+        $this->addOption('force', 'f', InputOption::VALUE_NONE, 'Force sync (skip hash checking)');
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
         $store = $this->stores->get((string)$input->getArgument('store'));
         $productId = (int)$input->getArgument('product_id');
+        $force = $input->getOption('force') === true;
 
         if(0 != $productId && DataObject::getById($productId) === null)
         {
@@ -65,7 +68,7 @@ class SyncCommand extends AbstractCommand
             foreach($ids as $id)
             {
                 $progressBar->setMessage("#{$id}");
-                $this->bus->dispatch(new PrestashopProductSyncMessage($id, $store->getName()));
+                $this->bus->dispatch(new PrestashopProductSyncMessage($id, $store->getName(), $force));
                 $progressBar->advance();
             }
 
@@ -76,7 +79,7 @@ class SyncCommand extends AbstractCommand
             return Command::SUCCESS;
         }
 
-        $this->bus->dispatch(new PrestashopProductSyncMessage($productId, $store->getName()));
+        $this->bus->dispatch(new PrestashopProductSyncMessage($productId, $store->getName(), $force));
 
         return Command::SUCCESS;
     }

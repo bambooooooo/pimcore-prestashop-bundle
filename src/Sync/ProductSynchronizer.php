@@ -17,6 +17,7 @@ use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientFactory;
 use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\Element\Note;
+use Psr\Log\LoggerInterface;
 
 class ProductSynchronizer
 {
@@ -25,7 +26,8 @@ class ProductSynchronizer
                                 private readonly StoreRegistry                            $storeRegistry,
                                 private readonly ProductMapper                            $productMapper,
                                 private readonly ProductImageSynchronizer                 $productImageSynchronizer,
-                                private readonly ExportPolicyInterface                    $exportPolicy)
+                                private readonly ExportPolicyInterface                    $exportPolicy,
+                                private readonly LoggerInterface                          $logger,)
     {}
 
     public function synchronize(int $objectId, string $storeName, bool $force = false): void
@@ -45,11 +47,12 @@ class ProductSynchronizer
         try
         {
             $externalReference = $this->synchronizeProduct($obj, $store, $hash, $client, $product, $force);
-            $this->productImageSynchronizer->synchronize($externalReference, $product, $storeName);
+            $this->productImageSynchronizer->synchronize($externalReference, $product, $storeName, $force);
         }
         catch (PrestashopException $exception)
         {
             $this->createAndSaveErrorNote($obj, $storeName, $exception->getMessage());
+            $this->logger->error("[$storeName] {$exception->getMessage()}");
         }
     }
 
@@ -64,6 +67,7 @@ class ProductSynchronizer
 
         if($externalReference !== null)
         {
+            $this->logger->notice("Updating #{$obj->getId()} with external id={$externalReference->getExternalId()}");
             return $this->updateExistingProduct($externalReference, $obj, $store, $hash, $storeClient, $prestashopProduct, $force);
         }
 

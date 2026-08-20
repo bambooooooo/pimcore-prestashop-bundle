@@ -59,6 +59,16 @@ final class StoreConfiguration
         return $this->languages;
     }
 
+    /**
+     * Default language (first in the config)
+     *
+     * @return string
+     */
+    public function getDefaultLanguage(): string
+    {
+        return $this->languages[0];
+    }
+
 
     /**
      * @return string[]

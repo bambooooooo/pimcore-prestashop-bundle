@@ -4,6 +4,8 @@ namespace Bnix\PimcorePrestashopBundle\Prestashop;
 
 final class PrestashopProductData
 {
+
+
     public function __construct(
         public ?string $reference = null,
         public ?array $name = null,
@@ -21,6 +23,9 @@ final class PrestashopProductData
         public ?string $isbn = null,
         public ?string $upc = null,
         public ?string $mpn = null,
+        public ?array $metaDescription = null,
+        public ?array $metaTitle = null,
+        public ?array $linkRewrite = null,
     )
     {
     }

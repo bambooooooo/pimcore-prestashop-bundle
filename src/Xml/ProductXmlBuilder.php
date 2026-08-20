@@ -40,8 +40,8 @@ final class ProductXmlBuilder
         $this->appendValue($document, $productNode, "mpn", $product->mpn);
         $this->appendValue($document, $productNode, 'price', $product->price);
 
-//        $this->appendLocalizedValue($document, $productNode, 'description', $product->description);
-//        $this->appendLocalizedValue($document, $productNode,'description_short', $product->descriptionShort);
+        $this->appendLocalizedValue($document, $productNode, 'description', $product->description);
+        $this->appendLocalizedValue($document, $productNode,'description_short', $product->descriptionShort);
 
 //        $this->appendValue($document, $productNode, "id_manufacturer", 1);
 //        $this->appendValue($document, $productNode, "id_supplier", 1);
@@ -85,10 +85,10 @@ final class ProductXmlBuilder
 //        $this->appendValue($document, $productNode, 'visibility', 'both');
 //        $this->appendValue($document, $productNode, 'advanced_stock_management', null);
 //        $this->appendValue($document, $productNode, 'pack_stock_type', null);
-//        $this->appendValue($document, $productNode, 'meta_description', null);
+        $this->appendLocalizedValue($document, $productNode, 'meta_description', $product->metaDescription);
 //        $this->appendValue($document, $productNode, 'meta_keywords', null);
-//        $this->appendValue($document, $productNode, 'meta_title', null);
-//        $this->appendValue($document, $productNode, 'link_rewrite', null);
+        $this->appendLocalizedValue($document, $productNode, 'meta_title', $product->metaTitle);
+        $this->appendLocalizedValue($document, $productNode, 'link_rewrite', $product->linkRewrite);
 //        $this->appendValue($document, $productNode,'available_now', null);
 //        $this->appendValue($document, $productNode,'available_later', null);
 //        $this->appendValue($document, $productNode, 'associations', null);
@@ -122,7 +122,7 @@ final class ProductXmlBuilder
 
         foreach ($localizedValue as $langId => $localizedName)
         {
-            $language = $document->createElement('language', $localizedName ?? "");
+            $language = $document->createElement('language', "$localizedName" ?? "");
             $language->setAttribute('id', "$langId");
             $element->appendChild($language);
         }
