@@ -36,6 +36,6 @@ final class MappingResolver
             }
         }
 
-        return new LiteralMapper();
+        return $this->container->get("Bnix\PimcorePrestashopBundle\Mapping\Mappers\LiteralMapper");
     }
 }

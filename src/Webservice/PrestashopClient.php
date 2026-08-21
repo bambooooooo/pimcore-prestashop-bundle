@@ -10,6 +10,8 @@ use Bnix\PimcorePrestashopBundle\Exception\ParsingException;
 use Bnix\PimcorePrestashopBundle\Exception\PrestashopException;
 use Bnix\PimcorePrestashopBundle\Exception\PrestashopNotFoundException;
 use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
+use Bnix\PimcorePrestashopBundle\Webservice\Response\UploadAttachmentResponse;
+use Bnix\PimcorePrestashopBundle\Xml\AttachmentXmlBuilder;
 use Bnix\PimcorePrestashopBundle\Xml\ProductXmlBuilder;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -19,6 +21,7 @@ final class PrestashopClient implements PrestashopClientInterface
         private readonly HttpClientInterface $client,
         private readonly StoreConfiguration  $store,
         private readonly ProductXmlBuilder   $productXmlBuilder,
+        private readonly AttachmentXmlBuilder $attachmentXmlBuilder,
     ) {
     }
 
@@ -59,6 +62,20 @@ final class PrestashopClient implements PrestashopClientInterface
         }
     }
 
+    public function clearProductAttachments(int $externalId)
+    {
+        $ids = $this->getProductAttachments($externalId);
+        foreach ($ids as $attachmentId)
+        {
+            $this->removeAttachment($attachmentId);
+        }
+    }
+
+    private function removeAttachment(int $attachmentId)
+    {
+        $this->delete('attachments/' . $attachmentId);
+    }
+
     public function getProductIdByReference(string $reference, $referenceField = 'reference'): int|null
     {
         $response = $this->get('products', [
@@ -92,6 +109,15 @@ final class PrestashopClient implements PrestashopClientInterface
         }
 
         return [];
+    }
+
+    private function getProductAttachments(int $externalId): array
+    {
+        $product = $this->get('products/' . $externalId, [
+            'limit' => 1
+        ]);
+
+        return $this->extractProductAttachmentsIds($product);
     }
 
     public function get(
@@ -272,6 +298,18 @@ final class PrestashopClient implements PrestashopClientInterface
         return $ids;
     }
 
+    private function extractProductAttachmentsIds(string $xml): array
+    {
+        $document = simplexml_load_string($xml);
+        $ids = [];
+
+        foreach ($document->product->associations->attachments->attachment ?? [] as $att) {
+            $ids[] = (int)($att->id);
+        }
+
+        return $ids;
+    }
+
     private function extractProductId(string $xml): int
     {
         $document = simplexml_load_string($xml);
@@ -313,5 +351,26 @@ final class PrestashopClient implements PrestashopClientInterface
                 '/'
             )
         );
+    }
+
+    public function uploadAttachment(string $filePath, string $name, string $mimeType): UploadAttachmentResponse
+    {
+        $res = $this->request("POST", "attachments/file", [
+            'body' => [
+                'file' => fopen($filePath, 'r'),
+            ]
+        ]);
+
+        $document = simplexml_load_string($res);
+        $id = (int)$document->attachment->id;
+        $hash = (string)$document->attachment->file;
+
+        return new UploadAttachmentResponse($id, $hash, $mimeType);
+    }
+
+    public function updateProductAttachment(UploadAttachmentResponse $data, array $name, string $filename, int $productId): void
+    {
+        $xml = $this->attachmentXmlBuilder->build($data, $name, $filename, $productId);
+        $this->put('attachments/' . $data->id, $xml);
     }
 }

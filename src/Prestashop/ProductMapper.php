@@ -3,6 +3,7 @@
 namespace Bnix\PimcorePrestashopBundle\Prestashop;
 
 use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
+use Bnix\PimcorePrestashopBundle\Exception\PrestashopException;
 use Bnix\PimcorePrestashopBundle\Mapping\MappingResolver;
 use Bnix\PimcorePrestashopBundle\Mapping\MappingConfiguration;
 use Pimcore\Model\DataObject;
@@ -75,8 +76,11 @@ final class ProductMapper
                     }
                     else
                     {
-                        $currentValue = is_array($currentValue) ? $currentValue : [$currentValue];
-                        $mergedValue = array_merge($mergedValue, $currentValue);
+                        if($currentValue !== null)
+                        {
+                            $currentValue = is_array($currentValue) ? $currentValue : [$currentValue];
+                            $mergedValue = array_merge($mergedValue, $currentValue);
+                        }
                     }
                 }
 
@@ -84,7 +88,12 @@ final class ProductMapper
             }
         }
 
-        $defaultLangId = $store->getLanguages()[array_key_first($store->getLanguages())];
+        if($values['price'] == 0)
+        {
+            throw new PrestashopException("Field 'price' is mandatory for Prestashop product mapping (#{$product->getId()}).");
+        }
+
+        $defaultLangId = $store->getDefaultLanguage();
 
         return new PrestashopProductData(
             reference: $this->asScalar($values['reference'] ?? null, $defaultLangId),
@@ -92,7 +101,7 @@ final class ProductMapper
             description: $this->asLocalized($values['description'] ?? null, $store->getLanguages()),
             descriptionShort: $this->asLocalized($values['description_short'] ?? null, $store->getLanguages()),
             supplierReference: $this->asScalar($values['supplier_reference'] ?? null, $defaultLangId),
-            price: $values['price'] ?? null,
+            price: $values['price'],
             images: $this->asList($values['images'] ?? []),
             width: $this->asScalar($values['width'] ?? null, $defaultLangId),
             height: $this->asScalar($values['height'] ?? null, $defaultLangId),
@@ -105,6 +114,7 @@ final class ProductMapper
             metaDescription: $this->asLocalized($values['meta_description'] ?? null, $store->getLanguages()),
             metaTitle: $this->asLocalized($values['meta_title'] ?? null, $store->getLanguages()),
             linkRewrite: $this->asLocalized($values['link_rewrite'] ?? null, $store->getLanguages(), true),
+            files: $this->asList($values['files'] ?? []),
         );
     }
 

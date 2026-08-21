@@ -17,6 +17,7 @@ use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientFactory;
 use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientInterface;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\Element\Note;
+use Pimcore\Model\Notification\Service\NotificationService;
 use Psr\Log\LoggerInterface;
 
 class ProductSynchronizer
@@ -26,6 +27,7 @@ class ProductSynchronizer
                                 private readonly StoreRegistry                            $storeRegistry,
                                 private readonly ProductMapper                            $productMapper,
                                 private readonly ProductImageSynchronizer                 $productImageSynchronizer,
+                                private readonly ProductFileSynchronizer                  $productFileSynchronizer,
                                 private readonly ExportPolicyInterface                    $exportPolicy,
                                 private readonly LoggerInterface                          $logger,)
     {}
@@ -39,15 +41,16 @@ class ProductSynchronizer
             return;
         }
 
-        $store = $this->storeRegistry->get($storeName);
-        $product = $this->productMapper->map($obj, $store);
-        $hash = $product->getHash();
-        $client = $this->clientFactory->create($storeName);
-
         try
         {
+            $store = $this->storeRegistry->get($storeName);
+            $product = $this->productMapper->map($obj, $store);
+            $hash = $product->getHash();
+            $client = $this->clientFactory->create($storeName);
+
             $externalReference = $this->synchronizeProduct($obj, $store, $hash, $client, $product, $force);
             $this->productImageSynchronizer->synchronize($externalReference, $product, $storeName, $force);
+            $this->productFileSynchronizer->synchronize($externalReference, $product, $storeName, $force);
         }
         catch (PrestashopException $exception)
         {

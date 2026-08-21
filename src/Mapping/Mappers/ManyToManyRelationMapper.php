@@ -10,29 +10,39 @@ use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 
 #[AsTaggedItem(priority: -10)]
-final class ManyToOneRelationMapper implements MapperInterface
+final class ManyToManyRelationMapper implements MapperInterface
 {
     private const FIELD_TYPES = [
-        'manyToOneRelation'
+        'manyToManyRelation'
     ];
 
     public function map(DataObject $object, string $field, array $languages = null, bool $isLocalized = false): mixed
     {
-        $objectFields = ['Name', 'Title', 'Code', 'Sku'];
+        $genericGetterNames = ['Name', 'Title', 'Code', 'Sku', 'Key', 'Id'];
 
         $getter = 'get' . ucfirst($field);
+        $manyToManyField = $object->$getter();
 
-        foreach($objectFields as $field)
+        if(!$manyToManyField)
+            return [];
+
+        $ret = [];
+
+        foreach($manyToManyField as $relation)
         {
-            $innerGetter = 'get' . ucfirst($field);
-
-            if(method_exists($object->$getter(), $innerGetter))
+            foreach($genericGetterNames as $innerGetterName)
             {
-                return $object->$getter()->$innerGetter();
+                $innerGetter = 'get' . ucfirst($innerGetterName);
+
+                if(method_exists($relation, $innerGetter))
+                {
+                    $ret[] = $relation->$innerGetter();
+                    break;
+                }
             }
         }
 
-        return $object->$getter()->getKey();
+        return $ret;
     }
 
     public function supports(string $fieldOrMapper, Data|null $definition, DataObject $product): bool
