@@ -166,7 +166,7 @@ class ExternalProductReference
 
     public function setHash4(string $hash): void
     {
-        $this->hash = $hash;
+        $this->hash4 = $hash;
         $this->updatedAt = new DateTime();
     }
 }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
-use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Pimcore\Model\DataObject\Data\QuantityValue;
 
 final class ClassificationStoreMapper implements MapperInterface
 {
@@ -47,6 +47,20 @@ final class ClassificationStoreMapper implements MapperInterface
                 }
 
                 $featureName = $key->getConfiguration()->getTitle();
+
+                if($value instanceof QuantityValue)
+                {
+                    $value = $value->getValue();
+                }
+                else if(is_array($value) && count($value) == 1 && array_is_list($value))
+                {
+                    $value = $value[0];
+                }
+                else if(is_array($value) && count($value) > 1 && array_is_list($value))
+                {
+                    $value = implode(', ', $value);
+                }
+
                 $ret[$featureName] = $value;
             }
         }

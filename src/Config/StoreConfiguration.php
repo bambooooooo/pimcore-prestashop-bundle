@@ -24,6 +24,7 @@ final class StoreConfiguration
         private readonly array  $currencies,
         private readonly array  $multistore,
         private readonly array  $mappings,
+        private readonly array  $excludedParameters
     ) {
     }
 
@@ -97,5 +98,10 @@ final class StoreConfiguration
     public function getMappings(): array
     {
         return $this->mappings;
+    }
+
+    public function getExcludedParameters(): array
+    {
+        return $this->excludedParameters;
     }
 }

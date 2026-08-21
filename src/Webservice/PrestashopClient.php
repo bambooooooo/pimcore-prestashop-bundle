@@ -12,16 +12,25 @@ use Bnix\PimcorePrestashopBundle\Exception\PrestashopNotFoundException;
 use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
 use Bnix\PimcorePrestashopBundle\Webservice\Response\UploadAttachmentResponse;
 use Bnix\PimcorePrestashopBundle\Xml\AttachmentXmlBuilder;
+use Bnix\PimcorePrestashopBundle\Xml\FeatureValueXmlBuilder;
+use Bnix\PimcorePrestashopBundle\Xml\FeatureXmlBuilder;
+use Bnix\PimcorePrestashopBundle\Xml\ProductFeaturesXmlBuilder;
 use Bnix\PimcorePrestashopBundle\Xml\ProductXmlBuilder;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class PrestashopClient implements PrestashopClientInterface
 {
     public function __construct(
-        private readonly HttpClientInterface $client,
-        private readonly StoreConfiguration  $store,
-        private readonly ProductXmlBuilder   $productXmlBuilder,
+        private readonly HttpClientInterface  $client,
+        private readonly StoreConfiguration   $store,
+        private readonly ProductXmlBuilder    $productXmlBuilder,
         private readonly AttachmentXmlBuilder $attachmentXmlBuilder,
+        private readonly FeatureXmlBuilder    $featureXmlBuilder,
+        private readonly FeatureValueXmlBuilder $featureValueXmlBuilder,
+        private readonly ProductFeaturesXmlBuilder $productFeaturesXmlBuilder,
+        private readonly CacheInterface       $cache,
     ) {
     }
 
@@ -120,6 +129,104 @@ final class PrestashopClient implements PrestashopClientInterface
         return $this->extractProductAttachmentsIds($product);
     }
 
+    public function getPsFeatureId(string $featureName, array $languages): int
+    {
+        return $this->cache->get($this->normalizeCacheEntryKey("ps_feature_id_" . $featureName), function(ItemInterface $item) use ($featureName, $languages) {
+
+            $res = $this->get('product_features', [
+                'filter[name]' => $featureName,
+            ]);
+
+            $id = $this->extractProductFeatureId($res);
+
+            if($id != null)
+            {
+                $item->expiresAfter(60 * 60 * 24);
+                return $id;
+            }
+
+            $id = $this->addFeature($featureName, $languages);
+            $item->expiresAfter(60 * 60 * 24);
+            return $id;
+        });
+    }
+
+    private function addFeature(string $featureName, array $languages): int
+    {
+        $xml = $this->featureXmlBuilder->build($featureName, $languages);
+        $res = $this->post('product_features', $xml);
+
+        return $this->extractProductFeatureId($res);
+    }
+
+    private function extractProductFeatureId($xml):int|null
+    {
+        $document = simplexml_load_string($xml);
+        $id = $document->product_feature->id;
+
+        if($id == null)
+        {
+            return null;
+        }
+
+        return (int)$id;
+    }
+
+    public function getPsFeatureValueId(int $featureId, string $featureValue, array $languages): int
+    {
+        return $this->cache->get($this->normalizeCacheEntryKey("ps_feature_value_id_" . $featureId . "_" . $featureValue),
+            function(ItemInterface $item) use ($featureValue, $featureId, $languages){
+
+            $res = $this->get('product_feature_values', [
+                'filter[id_feature]' => $featureId,
+                'filter[value]' => str_replace(" ", "%20", $featureValue),
+            ]);
+
+            $id = $this->extractProductFeatureValueId($res);
+
+            if($id != null)
+            {
+                $item->expiresAfter(60 * 60 * 24);
+                return $id;
+            }
+
+            $id = $this->addFeatureValue($featureId, $featureValue, $languages);
+            $item->expiresAfter(60 * 60 * 24);
+
+            return $id;
+        });
+    }
+
+    private function addFeatureValue(int $featureId, string $featureValue, array $languages): int
+    {
+        $xml = $this->featureValueXmlBuilder->build($featureId, $featureValue, $languages);
+        $res = $this->post('product_feature_values', $xml);
+
+        return $this->extractProductFeatureValueId($res);
+    }
+
+    private function extractProductFeatureValueId($xml):int|null
+    {
+        $document = simplexml_load_string($xml);
+        $id = $document->product_feature_value->id;
+
+        if($id == null)
+        {
+            return null;
+        }
+
+        return (int)$id;
+    }
+
+    private function normalizeCacheEntryKey(string $key): string
+    {
+        return str_replace(
+            ['{', '}', '(', ')', '/', '\\', '@', ':'],
+            '',
+            $key
+        );
+    }
+
     public function get(
         string $resource,
         array $parameters = []
@@ -170,7 +277,7 @@ final class PrestashopClient implements PrestashopClientInterface
     ): string {
 
         return $this->request(
-            'PUT',
+            'PATCH',
             $resource,
             [
                 'body' => $xml,
@@ -372,5 +479,11 @@ final class PrestashopClient implements PrestashopClientInterface
     {
         $xml = $this->attachmentXmlBuilder->build($data, $name, $filename, $productId);
         $this->put('attachments/' . $data->id, $xml);
+    }
+
+    public function updateProductFeatures(int $id, array $features)
+    {
+        $xml = $this->productFeaturesXmlBuilder->build($id, $features);
+        $this->patch('products/' . $id, $xml);
     }
 }

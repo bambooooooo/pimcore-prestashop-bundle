@@ -27,6 +27,7 @@ final class PrestashopProductData
         public ?array $metaTitle = null,
         public ?array $linkRewrite = null,
         public ?array $files = null,
+        public ?array $parameters = null,
     )
     {
     }

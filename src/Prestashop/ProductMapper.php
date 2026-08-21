@@ -115,6 +115,7 @@ final class ProductMapper
             metaTitle: $this->asLocalized($values['meta_title'] ?? null, $store->getLanguages()),
             linkRewrite: $this->asLocalized($values['link_rewrite'] ?? null, $store->getLanguages(), true),
             files: $this->asList($values['files'] ?? []),
+            parameters: $values['parameters'] ?? [],
         );
     }
 

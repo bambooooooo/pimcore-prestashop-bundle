@@ -22,4 +22,6 @@ interface PrestashopClientInterface
     public function uploadAttachment(string $filePath, string $name, string $mimeType): UploadAttachmentResponse;
 
     public function updateProductAttachment(UploadAttachmentResponse $data, array $name, string $filename, int $productId);
+
+    public function updateProductFeatures(int $id, array $features);
 }

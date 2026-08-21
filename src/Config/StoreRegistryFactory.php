@@ -22,6 +22,7 @@ final class StoreRegistryFactory
                 $store['currencies'] ?? [],
                 $store['multistore'] ?? [],
                 $store['mappings'] ?? [],
+                $store['excluded_parameters'] ?? [],
             );
         }
 

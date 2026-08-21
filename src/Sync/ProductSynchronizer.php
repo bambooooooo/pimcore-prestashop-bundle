@@ -28,6 +28,7 @@ class ProductSynchronizer
                                 private readonly ProductMapper                            $productMapper,
                                 private readonly ProductImageSynchronizer                 $productImageSynchronizer,
                                 private readonly ProductFileSynchronizer                  $productFileSynchronizer,
+                                private readonly ProductFeaturesSynchronizer              $productFeaturesSynchronizer,
                                 private readonly ExportPolicyInterface                    $exportPolicy,
                                 private readonly LoggerInterface                          $logger,)
     {}
@@ -51,11 +52,17 @@ class ProductSynchronizer
             $externalReference = $this->synchronizeProduct($obj, $store, $hash, $client, $product, $force);
             $this->productImageSynchronizer->synchronize($externalReference, $product, $storeName, $force);
             $this->productFileSynchronizer->synchronize($externalReference, $product, $storeName, $force);
+            $this->productFeaturesSynchronizer->synchronize($externalReference, $product, $storeName, $force);
         }
         catch (PrestashopException $exception)
         {
             $this->createAndSaveErrorNote($obj, $storeName, $exception->getMessage());
             $this->logger->error("[$storeName] {$exception->getMessage()}");
+        }
+        catch (\Throwable $e)
+        {
+            $this->logger->error("[$storeName] Error when syncing #{$obj->getId()} ({$obj->getKey()}) {$e->getMessage()}");
+            throw $e;
         }
     }
 

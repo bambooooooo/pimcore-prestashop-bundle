@@ -7,7 +7,11 @@ namespace Bnix\PimcorePrestashopBundle\Webservice;
 
 use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
 use Bnix\PimcorePrestashopBundle\Xml\AttachmentXmlBuilder;
+use Bnix\PimcorePrestashopBundle\Xml\FeatureValueXmlBuilder;
+use Bnix\PimcorePrestashopBundle\Xml\FeatureXmlBuilder;
+use Bnix\PimcorePrestashopBundle\Xml\ProductFeaturesXmlBuilder;
 use Bnix\PimcorePrestashopBundle\Xml\ProductXmlBuilder;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class PrestashopClientFactory
@@ -17,6 +21,10 @@ final class PrestashopClientFactory
         private readonly StoreRegistry $stores,
         private readonly ProductXmlBuilder $productXmlBuilder,
         private readonly AttachmentXmlBuilder $attachmentXmlBuilder,
+        private readonly FeatureXmlBuilder $featureXmlBuilder,
+        private readonly FeatureValueXmlBuilder $featureValueXmlBuilder,
+        private readonly ProductFeaturesXmlBuilder $productFeaturesXmlBuilder,
+        private readonly CacheInterface $cache,
     ) {
     }
 
@@ -27,6 +35,10 @@ final class PrestashopClientFactory
             $this->stores->get($store),
             $this->productXmlBuilder,
             $this->attachmentXmlBuilder,
+            $this->featureXmlBuilder,
+            $this->featureValueXmlBuilder,
+            $this->productFeaturesXmlBuilder,
+            $this->cache,
         );
     }
 }
