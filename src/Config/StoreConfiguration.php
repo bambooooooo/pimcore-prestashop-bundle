@@ -4,27 +4,32 @@ declare(strict_types=1);
 
 namespace Bnix\PimcorePrestashopBundle\Config;
 
+use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopFieldDefinition;
+use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopSchemaDefinition;
+
 final class StoreConfiguration
 {
     /**
+     * @param string $name
+     * @param string $url
+     * @param string $host
+     * @param string $apiKey
      * @param string[] $languages
      * @param string[] $currencies
-     * @param array<string, array{
-     *     shop_id:int,
-     *     shop_group_id:int
-     * }> $multistore
+     * @param array<string, MultiStore> $multistore
      * @param array<string, array<string,string>> $mappings
+     * @param array $excludedParameters
      */
     public function __construct(
-        private readonly string $name,
-        private readonly string $url,
-        private readonly string $host,
-        private readonly string $apiKey,
-        private readonly array  $languages,
-        private readonly array  $currencies,
-        private readonly array  $multistore,
-        private readonly array  $mappings,
-        private readonly array  $excludedParameters
+        private readonly string                      $name,
+        private readonly string                      $url,
+        private readonly string                      $host,
+        private readonly string                      $apiKey,
+        private readonly array                       $languages,
+        private readonly array                       $currencies,
+        private readonly array                       $multistore,
+        private readonly array                       $mappings,
+        private readonly array                       $excludedParameters
     ) {
     }
 
@@ -81,16 +86,12 @@ final class StoreConfiguration
 
 
     /**
-     * @return array<string,array{
-     *     shop_id:int,
-     *     shop_group_id:int
-     * }>
+     * @return array<string, MultiStore>
      */
     public function getMultistore(): array
     {
         return $this->multistore;
     }
-
 
     /**
      * @return array<string,array<string,string>>

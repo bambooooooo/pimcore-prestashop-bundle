@@ -11,6 +11,12 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ExternalProductReferenceRepository::class)]
 #[ORM\Table(
     name: 'bnix_external_reference',
+    uniqueConstraints: [
+        new ORM\UniqueConstraint(
+            name: 'uniq_object_system',
+            columns: ['object_id', 'system_name']
+        ),
+    ],
 )]
 class ExternalProductReference
 {
@@ -57,21 +63,21 @@ class ExternalProductReference
      * General purpose hash 2
      * @var string|null
      */
-    #[ORM\Column(name: 'hash_2', type: 'string', length: 64)]
+    #[ORM\Column(name: 'hash_2', type: 'string', length: 64, nullable: true)]
     private ?string $hash2;
 
     /**
      * General purpose hash 3
      * @var string|null
      */
-    #[ORM\Column(name: 'hash_3', type: 'string', length: 64)]
+    #[ORM\Column(name: 'hash_3', type: 'string', length: 64, nullable: true)]
     private ?string $hash3;
 
     /**
      * General purpose hash 4
      * @var string|null
      */
-    #[ORM\Column(name: 'hash_4', type: 'string', length: 64)]
+    #[ORM\Column(name: 'hash_4', type: 'string', length: 64, nullable: true)]
     private ?string $hash4;
 
     public function __construct(int $objectId, string $systemName, string $externalId, string $hash, string $hash2 = null, string $hash3 = null, string $hash4 = null)

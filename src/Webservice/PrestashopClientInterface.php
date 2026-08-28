@@ -3,13 +3,14 @@
 namespace Bnix\PimcorePrestashopBundle\Webservice;
 
 use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopProductData;
+use Bnix\PimcorePrestashopBundle\Prestashop\PrestashopSchemaDefinition;
 use Bnix\PimcorePrestashopBundle\Webservice\Response\UploadAttachmentResponse;
 
 interface PrestashopClientInterface
 {
     public function createProduct(PrestashopProductData $product): int;
 
-    public function updateProduct(PrestashopProductData $product, int $externalId);
+    public function updateProduct(PrestashopProductData $product, int $externalId, string $shopContext = 'all');
 
     public function clearProductImages(int $externalId);
 
@@ -24,4 +25,6 @@ interface PrestashopClientInterface
     public function updateProductAttachment(UploadAttachmentResponse $data, array $name, string $filename, int $productId);
 
     public function updateProductFeatures(int $id, array $features);
+
+    public function getSupportedLanguages(): array;
 }

@@ -45,11 +45,40 @@ class ProductSynchronizer
         try
         {
             $store = $this->storeRegistry->get($storeName);
+
             $product = $this->productMapper->map($obj, $store);
             $hash = $product->getHash();
             $client = $this->clientFactory->create($storeName);
 
             $externalReference = $this->synchronizeProduct($obj, $store, $hash, $client, $product, $force);
+
+            foreach($store->getMultistore() as $multiStoreName => $multiStoreConfig)
+            {
+                if(!$multiStoreConfig->mappings)
+                {
+                    continue;
+                }
+
+                $productInStoreContext = $this->productMapper->map($obj, $multiStoreConfig);
+                $productInStoreHash = $productInStoreContext->getHash();
+                $productInStoreReference = $this->productReferenceStorage->find($obj->getId(), $storeName . "-" . $multiStoreName);
+
+                if($productInStoreReference && $productInStoreReference->getHash() == $productInStoreHash)
+                {
+                    continue;
+                }
+
+                $client->updateProduct($productInStoreContext, (int)$externalReference->getExternalId(), (string)$multiStoreConfig->id);
+
+                if(!$productInStoreReference)
+                {
+                    $productInStoreReference = new ExternalProductReference($obj->getId(), $storeName . "-" . $multiStoreName, (string)$externalReference->getExternalId(), $productInStoreHash);
+                }
+
+                $productInStoreReference->setHash($productInStoreHash);
+                $this->productReferenceStorage->saveReference($productInStoreReference);
+            }
+
             $this->productImageSynchronizer->synchronize($externalReference, $product, $storeName, $force);
             $this->productFileSynchronizer->synchronize($externalReference, $product, $storeName, $force);
             $this->productFeaturesSynchronizer->synchronize($externalReference, $product, $storeName, $force);
@@ -71,7 +100,7 @@ class ProductSynchronizer
                                         string $hash,
                                         PrestashopClientInterface $storeClient,
                                         PrestashopProductData $prestashopProduct,
-                                        bool $force): ExternalProductReference
+                                        bool $force = false): ExternalProductReference
     {
         $externalReference = $this->productReferenceStorage->find($obj->getId(), $store->getName());
 

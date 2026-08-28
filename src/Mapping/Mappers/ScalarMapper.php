@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\Types\Scalar;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 
@@ -46,5 +47,10 @@ final class ScalarMapper implements MapperInterface
             return false;
 
         return in_array($definition->getFieldType(), self::FIELD_TYPES);
+    }
+
+    public function type(): string
+    {
+        return Scalar::class;
     }
 }

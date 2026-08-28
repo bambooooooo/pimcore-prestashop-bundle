@@ -21,15 +21,12 @@ final class ProductXmlBuilder
         $productNode = $document->createElement('product');
         $prestashop->appendChild($productNode);
 
-        if($id !== null)
-        {
-            $this->appendValue($document, $productNode, "id", $id);
-        }
+        $this->appendValue($document, $productNode, "id", $id);
 
         $this->appendValue($document, $productNode, "state", 1); // MANDATORY
         $this->appendValue($document, $productNode, "new", 1);
         $this->appendValue($document, $productNode, "reference", $product->reference);
-        $this->appendValue($document, $productNode, "supplier_reference", $product->reference);
+        $this->appendValue($document, $productNode, "supplier_reference", $product->supplierReference);
         $this->appendValue($document, $productNode, "width", $product->width);
         $this->appendValue($document, $productNode, "height", $product->height);
         $this->appendValue($document, $productNode, "depth", $product->depth);
@@ -39,64 +36,63 @@ final class ProductXmlBuilder
         $this->appendValue($document, $productNode, "upc", $product->upc);
         $this->appendValue($document, $productNode, "mpn", $product->mpn);
         $this->appendValue($document, $productNode, 'price', $product->price);
-
         $this->appendLocalizedValue($document, $productNode, 'description', $product->description);
         $this->appendLocalizedValue($document, $productNode,'description_short', $product->descriptionShort);
-
-//        $this->appendValue($document, $productNode, "id_manufacturer", 1);
-//        $this->appendValue($document, $productNode, "id_supplier", 1);
-//        $this->appendValue($document, $productNode, "id_category_default", 0);
-//        $this->appendValue($document, $productNode, "cache_default_attribute", 1);
-//        $this->appendValue($document, $productNode, "id_default_image", null);
-//        $this->appendValue($document, $productNode, "id_default_combination", null);
-//        $this->appendValue($document, $productNode, "id_tax_rules_group", 1);
-//        $this->appendValue($document, $productNode, "type", 1);
-//        $this->appendValue($document, $productNode, "id_shop_default", 1);
-//        $this->appendValue($document, $productNode, "location", null);
-//        $this->appendValue($document, $productNode, "quantity_discount", 0);
-//        $this->appendValue($document, $productNode, "cache_is_pack", 0);
-//        $this->appendValue($document, $productNode, "cache_has_attachments", 0);
-//        $this->appendValue($document, $productNode, "is_virtual", 0);
-//        $this->appendValue($document, $productNode, "additional_delivery_times", null);
-//        $this->appendValue($document, $productNode, "delivery_in_stock", null);
-//        $this->appendValue($document, $productNode, "delivery_out_stock", null);
-//        $this->appendValue($document, $productNode, "product_type", "standard");
-//        $this->appendValue($document, $productNode, "on_sale", 0);
-//        $this->appendValue($document, $productNode, "online_only", 0);
-//        $this->appendValue($document, $productNode, "ecotax", 0);
-//        $this->appendValue($document, $productNode, "minimal_quantity", 0);
-//        $this->appendValue($document, $productNode, "low_stock_threshold", 0);
-//        $this->appendValue($document, $productNode, "low_stock_alert", 0);
-//        $this->appendValue($document, $productNode, "unity", null);
-//        $this->appendValue($document, $productNode, "unit_price_ratio", null);
-//        $this->appendValue($document, $productNode, 'additional_shipping_cost', null);
-//        $this->appendValue($document, $productNode, 'customizable', null);
-//        $this->appendValue($document, $productNode, 'text_fields', null);
-//        $this->appendValue($document, $productNode, 'uploadable_files', null);
-//        $this->appendValue($document, $productNode, 'active', 1); // DO NOT APPEND
-//        $this->appendValue($document, $productNode, 'redirect_type', null);
-//        $this->appendValue($document, $productNode, 'id_type_redirected', null);
-//        $this->appendValue($document, $productNode, 'available_for_order', 1);
-//        $this->appendValue($document, $productNode, 'available_date', null);
-//        $this->appendValue($document, $productNode, 'show_condition', null);
-//        $this->appendValue($document, $productNode, 'condition', null);
-//        $this->appendValue($document, $productNode, 'show_price', 1);
-//        $this->appendValue($document, $productNode, 'indexed', null);
-//        $this->appendValue($document, $productNode, 'visibility', 'both');
-//        $this->appendValue($document, $productNode, 'advanced_stock_management', null);
-//        $this->appendValue($document, $productNode, 'pack_stock_type', null);
+        $this->appendValue($document, $productNode, "id_manufacturer", $product->id_manufacturer);
+        $this->appendValue($document, $productNode, "id_supplier", $product->id_supplier);
+        $this->appendValue($document, $productNode, "id_category_default", $product->id_category_default);
+        $this->appendValue($document, $productNode, "id_tax_rules_group", $product->id_tax_rules_group);
+        $this->appendValue($document, $productNode, "type", $product->type ?? 1);
+        $this->appendValue($document, $productNode, "location", $product->location);
+        $this->appendBoolValue($document, $productNode, "quantity_discount", $product->quantity_discount);
+        $this->appendValue($document, $productNode, "additional_delivery_times", $product->additional_delivery_times);
+        $this->appendValue($document, $productNode, "delivery_in_stock", $product->delivery_in_stock);
+        $this->appendValue($document, $productNode, "delivery_out_stock", $product->delivery_out_of_stock);
+        $this->appendValue($document, $productNode, "product_type", $product->type ?? "standard");
+        $this->appendBoolValue($document, $productNode, "on_sale", $product->on_sale);
+        $this->appendBoolValue($document, $productNode, "online_only", $product->online_only);
+        $this->appendValue($document, $productNode, "ecotax", $product->ecotax);
+        $this->appendValue($document, $productNode, "minimal_quantity", $product->minimum_quantity);
+        $this->appendValue($document, $productNode, "low_stock_threshold", $product->low_stock_threshold);
+        $this->appendBoolValue($document, $productNode, "low_stock_alert", $product->low_stock_alert);
+        $this->appendValue($document, $productNode, "unity", $product->unity);
+        $this->appendValue($document, $productNode, "unit_price_ratio", $product->unit_price_ratio);
+        $this->appendValue($document, $productNode, 'additional_shipping_cost', $product->additional_shipping_cost);
+        $this->appendBoolValue($document, $productNode, 'active', $product->active);
+        $this->appendValue($document, $productNode, 'redirect_type', $product->redirect_type);
+        $this->appendValue($document, $productNode, 'id_type_redirected', $product->id_type_redirected);
+        $this->appendBoolValue($document, $productNode, 'available_for_order', $product->available_for_order);
+        $this->appendValue($document, $productNode, 'available_date', $product->available_date);
+        $this->appendBoolValue($document, $productNode, 'show_condition', $product->show_condition);
+        $this->appendValue($document, $productNode, 'condition', $product->condition);
+        $this->appendBoolValue($document, $productNode, 'show_price', $product->show_price);
+        $this->appendBoolValue($document, $productNode, 'indexed', $product->indexed);
+        $this->appendValue($document, $productNode, 'visibility', $product->visibility);
+        $this->appendBoolValue($document, $productNode, 'advanced_stock_management', $product->advanced_stock_management);
+        $this->appendValue($document, $productNode, 'pack_stock_type', $product->stock_pack_type);
         $this->appendLocalizedValue($document, $productNode, 'meta_description', $product->metaDescription);
-//        $this->appendValue($document, $productNode, 'meta_keywords', null);
+        $this->appendLocalizedValue($document, $productNode, 'meta_keywords', $product->meta_keywords);
         $this->appendLocalizedValue($document, $productNode, 'meta_title', $product->metaTitle);
         $this->appendLocalizedValue($document, $productNode, 'link_rewrite', $product->linkRewrite);
-//        $this->appendValue($document, $productNode,'available_now', null);
-//        $this->appendValue($document, $productNode,'available_later', null);
-//        $this->appendValue($document, $productNode, 'associations', null);
-
-
+        $this->appendLocalizedValue($document, $productNode,'available_now', $product->available_now);
+        $this->appendLocalizedValue($document, $productNode,'available_later', $product->available_later);
         $this->appendLocalizedValue($document, $productNode, 'name', $product->name);
 
         return $document->saveXML();
+    }
+
+    private function appendBoolValue(DomDocument $document, \DOMElement $parent, string $name, mixed $value): void
+    {
+        if($value === null)
+        {
+            return;
+        }
+
+        $v = ($value === '0' || $value === 0 || $value === false) ? "0" : "1";
+
+        $element = $document->createElement($name, $v);
+
+        $parent->appendChild($element);
     }
 
     private function appendValue(DomDocument $document, \DOMElement $parent, string $name, mixed $value): void

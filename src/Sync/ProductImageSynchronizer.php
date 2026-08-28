@@ -9,7 +9,6 @@ use Bnix\PimcorePrestashopBundle\Registry\StoreRegistry;
 use Bnix\PimcorePrestashopBundle\Repository\ExternalProductReferenceRepository;
 use Bnix\PimcorePrestashopBundle\Storage\ExternalProductReferenceStorageInterface;
 use Bnix\PimcorePrestashopBundle\Webservice\PrestashopClientFactory;
-use http\Exception\RuntimeException;
 use Pimcore\Model\Asset;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -49,7 +48,7 @@ class ProductImageSynchronizer
     private function getControlHash(array $images): string
     {
         $merged = array_reduce($images, function ($carry, $item) {
-            $carry .= Asset\Image::getById($item)->getCustomSetting('checksum');
+            $carry .= Asset\Image::getById($item)?->getCustomSetting('checksum');
             return $carry;
         });
 
@@ -75,7 +74,7 @@ class ProductImageSynchronizer
 
                 if($size < 2_000_000)
                 {
-                    $cacheItem->expiresAfter(3600 * 24 * 30); // 30 days
+                    $cacheItem->expiresAfter(60 * 60 * 1);
                     return $tempFile;
                 }
             }

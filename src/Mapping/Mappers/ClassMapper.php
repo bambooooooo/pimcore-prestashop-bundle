@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\Types\Scalar;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
@@ -22,5 +23,10 @@ final class ClassMapper implements MapperInterface
     {
         $getter = 'get' . ucfirst($fieldOrMapper);
         return !$definition && method_exists($product, $getter);
+    }
+
+    public function type(): string
+    {
+        return Scalar::class;
     }
 }

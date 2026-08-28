@@ -8,6 +8,7 @@ use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Bnix\PimcorePrestashopBundle\Mapping\Types\Scalar;
 
 final class ImageMapper implements MapperInterface
 {
@@ -31,5 +32,10 @@ final class ImageMapper implements MapperInterface
             return false;
 
         return in_array($definition->getFieldType(), self::FIELD_TYPES);
+    }
+
+    public function type(): string
+    {
+        return Scalar::class;
     }
 }

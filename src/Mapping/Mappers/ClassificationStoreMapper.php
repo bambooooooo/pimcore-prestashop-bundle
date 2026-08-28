@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\Types\Parameters;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\Data\QuantityValue;
@@ -74,5 +75,10 @@ final class ClassificationStoreMapper implements MapperInterface
             return false;
 
         return in_array($definition->getFieldType(), self::FIELD_TYPES);
+    }
+
+    public function type(): string
+    {
+        return Parameters::class;
     }
 }

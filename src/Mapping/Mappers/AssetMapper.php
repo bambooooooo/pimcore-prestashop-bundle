@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnix\PimcorePrestashopBundle\Mapping\Mappers;
 
 use Bnix\PimcorePrestashopBundle\Mapping\MapperInterface;
+use Bnix\PimcorePrestashopBundle\Mapping\Types\Scalar;
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\ClassDefinition\Data\ManyToOneRelation;
@@ -35,5 +36,10 @@ final class AssetMapper implements MapperInterface
         $objectsAllowed = $definition->getObjectsAllowed();
 
         return $isAssetAllowed && !$documentAllowed && !$objectsAllowed;
+    }
+
+    public function type(): string
+    {
+        return Scalar::class;
     }
 }

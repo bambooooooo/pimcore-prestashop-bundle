@@ -2,6 +2,7 @@
 
 namespace Bnix\PimcorePrestashopBundle\Mapping;
 
+use Bnix\PimcorePrestashopBundle\Config\MultiStore;
 use Bnix\PimcorePrestashopBundle\Config\StoreConfiguration;
 
 final class MappingConfiguration
@@ -15,9 +16,9 @@ final class MappingConfiguration
     }
 
 
-    public static function fromStore(StoreConfiguration $store, string $className): self {
+    public static function fromStore(StoreConfiguration|MultiStore $store, string $className): self {
 
-        if( !isset($store->getMappings()[$className]))
+        if(!isset($store->getMappings()[$className]))
         {
             throw new \RuntimeException("No mapping found for class '$className'.");
         }

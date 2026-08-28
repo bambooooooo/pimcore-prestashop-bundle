@@ -42,23 +42,19 @@ final class PrestashopClient implements PrestashopClientInterface
         return $this->extractProductId($response);
     }
 
-    public function updateProduct(PrestashopProductData $product, int $externalId)
+    public function updateProduct(PrestashopProductData $product, int $externalId, string $shopContext = 'all')
     {
         $xml = $this->productXmlBuilder->build($product, $externalId);
-        $response = $this->put('products/' . $externalId, $xml);
-
-        assert($externalId == $this->extractProductId($response));
+        $this->patch('products/' . $externalId, $xml, $shopContext);
     }
 
     public function uploadProductImage(int $externalId, string $imagePath)
     {
-        $response = $this->request('POST', 'images/products/' . $externalId, [
+        $this->request('POST', 'images/products/' . $externalId, [
             'body' => [
                 'image' => fopen($imagePath, 'r')
             ]
         ]);
-
-        assert($this->extractImageId($response) > 0);
     }
 
     public function clearProductImages(int $externalId)
@@ -131,7 +127,8 @@ final class PrestashopClient implements PrestashopClientInterface
 
     public function getPsFeatureId(string $featureName, array $languages): int
     {
-        return $this->cache->get($this->normalizeCacheEntryKey("ps_feature_id_" . $featureName), function(ItemInterface $item) use ($featureName, $languages) {
+        $cacheKey = $this->normalizeCacheEntryKey("ps_" . $this->store->getName() . "_feature_id_" . $featureName);
+        return $this->cache->get($cacheKey, function(ItemInterface $item) use ($featureName, $languages) {
 
             $res = $this->get('product_features', [
                 'filter[name]' => $featureName,
@@ -141,12 +138,12 @@ final class PrestashopClient implements PrestashopClientInterface
 
             if($id != null)
             {
-                $item->expiresAfter(60 * 60 * 24);
+                $item->expiresAfter(60 * 60 * 1);
                 return $id;
             }
 
             $id = $this->addFeature($featureName, $languages);
-            $item->expiresAfter(60 * 60 * 24);
+            $item->expiresAfter(60 * 60 * 1);
             return $id;
         });
     }
@@ -174,8 +171,8 @@ final class PrestashopClient implements PrestashopClientInterface
 
     public function getPsFeatureValueId(int $featureId, string $featureValue, array $languages): int
     {
-        return $this->cache->get($this->normalizeCacheEntryKey("ps_feature_value_id_" . $featureId . "_" . $featureValue),
-            function(ItemInterface $item) use ($featureValue, $featureId, $languages){
+        $cacheKey = $this->normalizeCacheEntryKey("ps_" . $this->store->getName() . "_feature_value_id_" . $featureId . "_" . $featureValue);
+        return $this->cache->get($cacheKey, function(ItemInterface $item) use ($featureValue, $featureId, $languages){
 
             $res = $this->get('product_feature_values', [
                 'filter[id_feature]' => $featureId,
@@ -186,12 +183,12 @@ final class PrestashopClient implements PrestashopClientInterface
 
             if($id != null)
             {
-                $item->expiresAfter(60 * 60 * 24);
+                $item->expiresAfter(60 * 60 * 1);
                 return $id;
             }
 
             $id = $this->addFeatureValue($featureId, $featureValue, $languages);
-            $item->expiresAfter(60 * 60 * 24);
+            $item->expiresAfter(60 * 60 * 1);
 
             return $id;
         });
@@ -229,22 +226,25 @@ final class PrestashopClient implements PrestashopClientInterface
 
     public function get(
         string $resource,
-        array $parameters = []
+        array $parameters = [],
+        string|int $shopContext = 'all'
     ): string {
 
         return $this->request(
             'GET',
             $resource,
             [
-                'query' => $parameters,
-            ]
+                'query' => $parameters
+            ],
+            $shopContext
         );
     }
 
 
     private function post(
         string $resource,
-        string $xml
+        string $xml,
+        string|int $storeContext = 'all'
     ): string {
 
         return $this->request(
@@ -252,14 +252,16 @@ final class PrestashopClient implements PrestashopClientInterface
             $resource,
             [
                 'body' => $xml,
-            ]
+            ],
+            $storeContext
         );
     }
 
 
     private function put(
         string $resource,
-        string $xml
+        string $xml,
+        string|int $storeContext = 'all'
     ): string {
 
         return $this->request(
@@ -267,13 +269,15 @@ final class PrestashopClient implements PrestashopClientInterface
             $resource,
             [
                 'body' => $xml,
-            ]
+            ],
+            $storeContext
         );
     }
 
     private function patch(
         string $resource,
-        string $xml
+        string $xml,
+        string|int $storeContext = 'all'
     ): string {
 
         return $this->request(
@@ -281,22 +285,23 @@ final class PrestashopClient implements PrestashopClientInterface
             $resource,
             [
                 'body' => $xml,
-            ]
+            ],
+            $storeContext
         );
     }
 
 
     private function delete(
         string $resource,
-        array $parameters = []
-    ): void {
+        array $parameters = [],
+        string|int $storeContext = 'all'
+    ): string {
 
-        $this->request(
+        return $this->request(
             'DELETE',
             $resource,
-            [
-                'query' => $parameters,
-            ]
+            $parameters,
+            $storeContext
         );
     }
 
@@ -304,27 +309,31 @@ final class PrestashopClient implements PrestashopClientInterface
     private function request(
         string $method,
         string $resource,
-        array $options
+        array $options = [],
+        $storeContext = 'all'
     ): string {
+
+        $options = array_merge(
+            [
+                'auth_basic' => [
+                    $this->store->getApiKey(),
+                    '',
+                ],
+                'headers' => [
+                    'Accept' => 'application/xml',
+                    'Host' => $this->store->getHost(),
+                ]
+            ],
+            $options
+        );
+
+        $options['query']['id_shop'] = $storeContext;
 
         $response = $this->client->request(
             $method,
             $this->buildUrl($resource),
-            array_merge(
-                [
-                    'auth_basic' => [
-                        $this->store->getApiKey(),
-                        '',
-                    ],
-                    'headers' => [
-                        'Accept' => 'application/xml',
-                        'Host' => $this->store->getHost(),
-                    ],
-                ],
-                $options
-            )
+            $options
         );
-
 
         $statusCode = $response->getStatusCode();
 
@@ -485,5 +494,91 @@ final class PrestashopClient implements PrestashopClientInterface
     {
         $xml = $this->productFeaturesXmlBuilder->build($id, $features);
         $this->patch('products/' . $id, $xml);
+    }
+
+    public function getPrivileges(): array
+    {
+        $access = $this->get('');
+
+        $xml = simplexml_load_string($access);
+        $output = [];
+
+        foreach($xml->api->children() as $privilege)
+        {
+            $output[$privilege->getName()] = [];
+            foreach($privilege->attributes() as $key => $value)
+            {
+                if($value == 'true')
+                {
+                    $output[$privilege->getName()][] = $key;
+                }
+            }
+        }
+
+        return $output;
+    }
+
+    public function getStores():array
+    {
+        $stores = $this->get('shops',
+            [
+                'display' => 'full'
+            ]);
+
+        $xml = simplexml_load_string($stores);
+
+        $output = [];
+
+        foreach($xml->shops->shop as $shop)
+        {
+            $output[] = [
+                'id' => (int)$shop->id,
+                'id_shop_group' => (int)$shop->id_shop_group,
+                'name' => (string)$shop->name,
+            ];
+        }
+
+        dump($output);
+
+        return [];
+    }
+
+
+    public function getSupportedLanguages(): array
+    {
+        $langs = $this->get('languages',
+        [
+            'display' => 'full'
+        ]);
+
+        $xml = simplexml_load_string($langs);
+
+        dump($xml);
+
+        $output = [];
+
+        foreach($xml->languages->language as $lang)
+        {
+            $output[(string)$lang->iso_code] = (int)$lang->id;
+        }
+
+        return $output;
+    }
+
+    public function getCurrencies(): array
+    {
+        $currencies = $this->get('currencies', [
+            'display' => '[id,iso_code]'
+        ]);
+
+        $xml = simplexml_load_string($currencies);
+        $output = [];
+
+        foreach($xml->currencies->currency as $curr)
+        {
+            $output[(string)$curr->iso_code] = (int)$curr->id;
+        }
+
+        return $output;
     }
 }
